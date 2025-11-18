@@ -1,5 +1,5 @@
 #[derive(Debug)]
-pub enum DbError {
+pub enum PostgresError {
     ConnectionError,
     Timeout,
     UniqueViolation,
