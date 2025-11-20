@@ -38,13 +38,4 @@ impl<T: Serialize> ApiResponse<T> {
             data: None,
         }
     }
-
-    pub fn fail(reason: ErrorReason) -> Self {
-        Self {
-            status: reason.status,
-            code: reason.code,
-            message: Some(reason.message),
-            data: None,
-        }
-    }
 }
