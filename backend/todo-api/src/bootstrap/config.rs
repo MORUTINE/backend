@@ -1,5 +1,5 @@
+use config::{Config, Environment, File};
 use serde::Deserialize;
-use config::{Config, File, Environment};
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct AppConfig {
@@ -60,10 +60,12 @@ pub struct LoggingConfig {
 // }
 
 pub fn load_config() -> AppConfig {
+    dotenvy::dotenv().ok();
+
     let builder = Config::builder()
         .add_source(File::with_name("config/default"))
         .add_source(File::with_name("config/local").required(false))
-        .add_source(Environment::default().separator("__"));
+        .add_source(Environment::with_prefix("APP").separator("__"));
 
     builder.build().unwrap().try_deserialize().unwrap()
 }

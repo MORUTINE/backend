@@ -2,14 +2,14 @@ server:
   port: 8080
 
 database:
-  host: ${DB_HOST}
-  port: ${DB_PORT}
-  username: ${DB_USERNAME}
-  password: ${DB_PASSWORD}
-  name: ${DB_NAME}
+  host: ""
+  port: ""
+  username: ""
+  password: ""
+  name: ""
 
 cors:
-  allow_origin: ${CORS_ALLOW_ORIGIN}
+  allow_origin: ""
 
 logging:
   level: "info"
