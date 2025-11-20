@@ -5,10 +5,10 @@ use axum::{
 };
 use serde_json::json;
 
-use crate::utils::error::app_error::AppError;
+use crate::common::error::app_error::AppError;
+use crate::common::error::postgres_error_wrapper::PostgresApiError;
 use common::error::{CommonErrorCode, ErrorCode};
 use infra::database::postgres::PostgresError;
-use crate::utils::error::postgres_error_wrapper::PostgresApiError;
 
 // AppError<E> -> HTTP Response
 impl<E: ErrorCode> IntoResponse for AppError<E> {

@@ -25,6 +25,6 @@ jsonwebtoken = { version = "10.2.0", features = ["rust_crypto"] }
 bcrypt = "0.17.0"
 
 # 도메인/인프라 의존성
-domain = { path = "../domain" }
-infra = { path = "../infra" }
-common = { path = "../common" }
+domain = { path = "../todo-domain" }
+infra = { path = "../todo-infra" }
+common = { path = "../todo-common" }
