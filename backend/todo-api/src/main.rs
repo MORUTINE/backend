@@ -13,7 +13,7 @@ async fn main() {
 
     let state = init_state(&config).await;
 
-    let router = create_app_router().with_state(state);
+    let router = create_app_router(&config).with_state(state);
 
     run_server(router, config.server.port).await;
 }
