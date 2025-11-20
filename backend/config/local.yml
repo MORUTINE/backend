@@ -1,0 +1,15 @@
+server:
+  port: 8080
+
+database:
+  host: "localhost"
+  port: 5432
+  username: ${DB_USERNAME}
+  password: ${DB_PASSWORD}
+  name: ${DB_NAME}
+
+cors:
+  allow_origin: "http://localhost:5173"
+
+logging:
+  level: "debug"

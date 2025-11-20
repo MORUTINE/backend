@@ -1,0 +1,26 @@
+server:
+  port: 8080
+
+database:
+  host: ${DB_HOST}
+  port: ${DB_PORT}
+  username: ${DB_USERNAME}
+  password: ${DB_PASSWORD}
+  name: ${DB_NAME}
+
+cors:
+  allow_origin: ${CORS_ALLOW_ORIGIN}
+
+logging:
+  level: "info"
+
+#jwt:
+#  access_secret: ${JWT_ACCESS_SECRET}
+#  refresh_secret: ${JWT_REFRESH_SECRET}
+#  access_expire_seconds: 1800       # 30분
+#  refresh_expire_seconds: 604800    # 7일
+
+#oauth:
+#  kakao_client_id: ${KAKAO_CLIENT_ID}
+#  kakao_client_secret: ${KAKAO_CLIENT_SECRET}
+#  redirect_uri: ${KAKAO_REDIRECT_URI}
