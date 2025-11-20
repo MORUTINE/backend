@@ -1,5 +1,6 @@
 use axum::Router;
-use sea_orm::{Database, DatabaseConnection};
+use sea_orm::{ConnectOptions, Database, DatabaseConnection};
+use std::time::Duration;
 
 use crate::bootstrap::config::AppConfig;
 
@@ -12,7 +13,16 @@ pub struct AppState {
 pub async fn init_state(config: &AppConfig) -> AppState {
     let db_url = config.database.to_postgres_url();
 
-    let db = Database::connect(&db_url)
+    let mut opt = ConnectOptions::new(db_url.clone());
+    opt.max_connections(10)                 // FIXME: 세팅값은 나중에 최적화
+        .min_connections(5)
+        .connect_timeout(Duration::from_secs(5))
+        .acquire_timeout(Duration::from_secs(5))
+        .idle_timeout(Duration::from_secs(30))
+        .max_lifetime(Duration::from_secs(600))
+        .sqlx_logging(true);
+
+    let db = Database::connect(opt)
         .await
         .expect("DB 연결에 실패 했습니다.");
 
