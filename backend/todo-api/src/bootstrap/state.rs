@@ -1,3 +1,4 @@
+use axum::Router;
 use sea_orm::{Database, DatabaseConnection};
 
 use crate::bootstrap::config::AppConfig;
@@ -19,4 +20,13 @@ pub async fn init_state(config: &AppConfig) -> AppState {
         db,
         config: config.clone(),
     }
+}
+
+pub async fn run_server(app: Router, port: u16) {
+    let addr = format!("0.0.0.0:{port}");
+
+    tracing::info!("서버가 {addr} 에서 실행 중");
+
+    let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
+    axum::serve(listener, app).await.unwrap();
 }

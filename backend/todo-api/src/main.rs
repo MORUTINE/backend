@@ -1,16 +1,19 @@
 mod bootstrap;
 mod common;
+mod domain;
+mod routes;
 
-use crate::bootstrap::init_logger;
-use bootstrap::{init_state, load_config};
+use crate::routes::create_app_router;
+use bootstrap::{init_logger, init_state, load_config, run_server};
 
 #[tokio::main]
 async fn main() {
     let config = load_config();
     init_logger(&config);
 
-    println!("{:#?}", config);
-
     let state = init_state(&config).await;
-    tracing::info!("DB 연결 성공");
+
+    let router = create_app_router().with_state(state);
+
+    run_server(router, config.server.port).await;
 }

@@ -1,6 +1,5 @@
-use axum::{Json, response::IntoResponse, http::StatusCode};
+use axum::{Json, http::StatusCode, response::IntoResponse};
 use common::constant::status::*;
-use common::error::error_reason::ErrorReason;
 use serde::Serialize;
 
 #[derive(Debug, Serialize)]
