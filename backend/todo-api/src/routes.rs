@@ -1,10 +1,14 @@
 use crate::bootstrap::config::AppConfig;
-use crate::bootstrap::{AppState, build_cors};
+use crate::bootstrap::{
+    AppState, build_compression_layer, build_concurrency_limit_layer, build_cors,
+};
 use crate::domain::system::routes::system_routes;
 use axum::Router;
 
 pub fn create_app_router(config: &AppConfig) -> Router<AppState> {
     Router::new()
         .nest("/system", system_routes())
+        .layer(build_compression_layer())
+        .layer(build_concurrency_limit_layer())
         .layer(build_cors(config))
 }

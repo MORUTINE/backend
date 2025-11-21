@@ -7,7 +7,8 @@ edition = "2024"
 axum = { version = "0.8.6", features = ["macros"] }
 tokio = { version = "1.37", features = ["macros", "rt-multi-thread"] }
 sea-orm = "1.1.19"
-tower-http = { version = "0.6", features = ["cors"] }
+tower = { version = "0.5.2", features = ["timeout", "limit"] }
+tower-http = { version = "0.6", features = ["cors", "trace", "compression-gzip", "request-id"] }
 http = "1"
 
 # 로깅 & 에러 핸들링

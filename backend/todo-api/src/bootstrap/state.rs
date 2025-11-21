@@ -14,7 +14,7 @@ pub async fn init_state(config: &AppConfig) -> AppState {
     let db_url = config.database.to_postgres_url();
 
     let mut opt = ConnectOptions::new(db_url.clone());
-    opt.max_connections(10)                 // FIXME: 세팅값은 나중에 최적화
+    opt.max_connections(10) // FIXME: 세팅값은 나중에 최적화
         .min_connections(5)
         .connect_timeout(Duration::from_secs(5))
         .acquire_timeout(Duration::from_secs(5))
@@ -38,5 +38,6 @@ pub async fn run_server(app: Router, port: u16) {
     tracing::info!("서버가 {addr} 에서 실행 중");
 
     let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
+
     axum::serve(listener, app).await.unwrap();
 }
