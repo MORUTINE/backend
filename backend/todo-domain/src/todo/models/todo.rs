@@ -55,3 +55,48 @@ impl Todo {
         self.modified_at
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::todo::models::todo_item::TodoItem;
+
+    #[test]
+    fn new_todo_success() {
+        let date = NaiveDate::from_ymd_opt(2025, 11, 22).unwrap();
+        let todo = Todo::new(818, date);
+
+        assert_eq!(todo.user_id(), 818);
+        assert_eq!(todo.date(), date);
+        assert!(todo.items().is_empty());
+        assert!(todo.id().is_none());
+    }
+
+    #[test]
+    fn add_item_success() {
+        let date = NaiveDate::from_ymd_opt(2025, 11, 22).unwrap();
+        let mut todo = Todo::new(1, date);
+
+        let item = TodoItem::new(1, "데드 100kg 10회 10세트".to_string()).unwrap();
+        let prev_time = todo.modified_at();
+
+        todo.add_item(item).unwrap();
+
+        assert_eq!(todo.items().len(), 1);
+        assert!(todo.modified_at() > prev_time);
+    }
+
+    #[test]
+    fn add_item_should_fail_when_exceeds_limit() {
+        let date = NaiveDate::from_ymd_opt(2025, 11, 22).unwrap();
+        let mut todo = Todo::new(1, date);
+
+        todo.add_item(TodoItem::new(1, "벤치 80kg 10회 10세트".to_string()).unwrap()).unwrap();
+        todo.add_item(TodoItem::new(1, "스쿼트 100kg 10회 10세트".to_string()).unwrap()).unwrap();
+        todo.add_item(TodoItem::new(1, "데드 100kg 10회 10세트".to_string()).unwrap()).unwrap();
+
+        let result = todo.add_item(TodoItem::new(1, "OHP 40kg 10회 10세트".to_string()).unwrap());
+
+        assert!(matches!(result, Err(TodoError::MaxItemLimit)));
+    }
+}
