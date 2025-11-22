@@ -74,3 +74,55 @@ impl TodoItem {
         self.modified_at
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::todo::models::todo_item_status::TodoItemStatus;
+
+    #[test]
+    fn new_todo_item_success() {
+        let item = TodoItem::new(1, "벤치 프레스 80kg 10회 10세트".to_string()).unwrap();
+
+        assert_eq!(item.todo_id(), 1);
+        assert_eq!(item.content(), "벤치 프레스 80kg 10회 10세트");
+        assert_eq!(item.status(), TodoItemStatus::Pending);
+        assert!(item.id().is_none());
+    }
+
+    #[test]
+    fn new_todo_item_empty_content_should_fail() {
+        let res = TodoItem::new(1, "   ".to_string());
+        assert!(matches!(res, Err(TodoError::EmptyContent)));
+    }
+
+    #[test]
+    fn complete_should_update_status_and_modified_at() {
+        let mut item = TodoItem::new(1, "todo 프로젝트 Rust Axum 백엔드 서버 구축".to_string()).unwrap();
+        let old_time = item.modified_at();
+
+        item.completed();
+
+        assert_eq!(item.status(), TodoItemStatus::Completed);
+        assert!(item.modified_at() > old_time);
+    }
+
+    #[test]
+    fn altered_should_update_status_and_plan() {
+        let mut item = TodoItem::new(1, "벤치 프레스 80kg 10회 10세트".to_string()).unwrap();
+
+        item.altered("오늘 벤치 사람 너무 많아서, 스쿼트 100kg 10회 10세트로 대체".to_string());
+
+        assert_eq!(item.status(), TodoItemStatus::Altered);
+        assert_eq!(item.altered_plan(), Some(&"오늘 벤치 사람 너무 많아서, 스쿼트 100kg 10회 10세트로 대체".to_string()));
+    }
+
+    #[test]
+    fn failed_should_update_status() {
+        let mut item = TodoItem::new(1, "todo 프로젝트 Svelte 프론트 제작".to_string()).unwrap();
+
+        item.failed();
+
+        assert_eq!(item.status(), TodoItemStatus::Failed);
+    }
+}
