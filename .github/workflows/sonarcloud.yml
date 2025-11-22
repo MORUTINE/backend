@@ -49,5 +49,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           args: >
-            -Dsonar.projectBaseDir=backend
+            -Dsonar.projectBaseDir=backend  
+            -Dsonar.projectKey=zzaekkii_challenge-to-do
+            -Dsonar.organization=zzaekkii
             -Dsonar.javascript.lcov.reportPaths=coverage.lcov
