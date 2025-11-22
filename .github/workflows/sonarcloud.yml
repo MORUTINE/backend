@@ -26,6 +26,7 @@ jobs:
         run: cargo install grcov
 
       - name: Run tests with coverage instrumentation
+        working-directory: backend
         run: |
           CARGO_INCREMENTAL=0 \
           RUSTFLAGS="-Cinstrument-coverage" \
@@ -33,6 +34,7 @@ jobs:
           cargo test --all --verbose
 
       - name: Generate coverage report (lcov)
+        working-directory: backend
         run: |
           grcov . \
             --binary-path ./target/debug/ \
@@ -42,6 +44,7 @@ jobs:
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@v2
+        working-directory: backend
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
