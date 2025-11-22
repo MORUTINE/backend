@@ -1,0 +1,50 @@
+name: SonarCloud
+
+on:
+  pull_request:
+    branches:
+      - develop
+  push:
+    branches:
+      - develop
+
+jobs:
+  sonarcloud:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Rust with Clippy
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+
+      - name: Install grcov
+        run: cargo install grcov
+
+      - name: Run tests with coverage instrumentation
+        run: |
+          CARGO_INCREMENTAL=0 \
+          RUSTFLAGS="-Cinstrument-coverage" \
+          LLVM_PROFILE_FILE="coverage-%p-%m.profraw" \
+          cargo test --all --verbose
+
+      - name: Generate coverage report (lcov)
+        run: |
+          grcov . \
+            --binary-path ./target/debug/ \
+            -s . -t lcov \
+            --branch --ignore-not-existing \
+            -o coverage.lcov
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@v2
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          args: >
+            -Dsonar.javascript.lcov.reportPaths=coverage.lcov
