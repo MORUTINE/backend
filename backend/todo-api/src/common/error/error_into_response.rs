@@ -29,7 +29,7 @@ impl<E: ErrorCode> IntoResponse for AppError<E> {
 impl IntoResponse for DatabaseApiError {
     fn into_response(self) -> Response {
         let app_error: AppError<CommonErrorCode> = match self.0 {
-            DatabaseError::UniqueViolation => AppError::new(CommonErrorCode::Conflict),
+            DatabaseError::UniqueViolation(_) => AppError::new(CommonErrorCode::Conflict),
 
             DatabaseError::NotFound => AppError::new(CommonErrorCode::NotFound),
 

@@ -22,7 +22,7 @@ impl TodoItemStatus {
 impl TryFrom<&str> for TodoItemStatus {
     type Error = TodoError;
 
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
+    fn try_from(value: &str) -> Result<Self, TodoError> {
         match value {
             "PENDING" => Ok(TodoItemStatus::Pending),
             "COMPLETED" => Ok(TodoItemStatus::Completed),
@@ -32,4 +32,3 @@ impl TryFrom<&str> for TodoItemStatus {
         }
     }
 }
-
