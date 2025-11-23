@@ -1,4 +1,4 @@
-use infra::database::error::DatabaseError;
+use infra::database::database_error_code::DatabaseErrorCode;
 
 #[derive(Debug)]
-pub struct DatabaseApiError(pub DatabaseError);
+pub struct DatabaseApiError(pub DatabaseErrorCode);

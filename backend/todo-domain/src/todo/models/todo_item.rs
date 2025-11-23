@@ -1,4 +1,4 @@
-use crate::todo::error::TodoError::{self, EmptyContent};
+use crate::todo::todo_error_code::TodoErrorCode::{self, EmptyContent};
 use crate::todo::models::todo_item_status::TodoItemStatus;
 use TodoItemStatus::{Altered, Completed, Failed, Pending};
 use chrono::{DateTime, Utc};
@@ -19,7 +19,7 @@ pub struct TodoItem {
 }
 
 impl TodoItem {
-    pub(crate) fn new(todo_id: i64, content: &str) -> Result<Self, TodoError> {
+    pub(crate) fn new(todo_id: i64, content: &str) -> Result<Self, TodoErrorCode> {
         if content.trim().is_empty() {
             return Err(EmptyContent);
         }

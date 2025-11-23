@@ -3,7 +3,7 @@ use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, QueryFilter, Set};
 
 use super::todo_mapper::TodoMapper;
 use super::{todo_entity, todo_item_entity};
-use crate::database::error::DatabaseError;
+use crate::database::database_error_code::DatabaseErrorCode;
 use domain::todo::models::{todo::Todo, todo_item::TodoItem};
 use domain::todo::repository::todo_repository::TodoRepository;
 
@@ -29,7 +29,7 @@ impl TodoRepository for TodoRepositoryImpl {
             .filter(todo_entity::Column::Date.eq(date))
             .one(&self.db)
             .await
-            .map_err(DatabaseError::QueryError)?;
+            .map_err(DatabaseErrorCode::QueryError)?;
 
         let Some(todo) = todo else {
             return Ok(None);
@@ -39,7 +39,7 @@ impl TodoRepository for TodoRepositoryImpl {
             .filter(todo_item_entity::Column::TodoId.eq(todo.id))
             .all(&self.db)
             .await
-            .map_err(DatabaseError::QueryError)?;
+            .map_err(DatabaseErrorCode::QueryError)?;
 
         let mapped = TodoMapper::map_entity_to_todo(todo, items)?;
 
@@ -52,7 +52,7 @@ impl TodoRepository for TodoRepositoryImpl {
         let saved = active
             .insert(&self.db)
             .await
-            .map_err(DatabaseError::QueryError)?;
+            .map_err(DatabaseErrorCode::QueryError)?;
 
         Ok(TodoMapper::map_entity_to_todo(saved, vec![])?)
     }
@@ -63,13 +63,13 @@ impl TodoRepository for TodoRepositoryImpl {
         let saved = active
             .update(&self.db)
             .await
-            .map_err(DatabaseError::QueryError)?;
+            .map_err(DatabaseErrorCode::QueryError)?;
 
         let items = todo_item_entity::Entity::find()
             .filter(todo_item_entity::Column::TodoId.eq(saved.id))
             .all(&self.db)
             .await
-            .map_err(DatabaseError::QueryError)?;
+            .map_err(DatabaseErrorCode::QueryError)?;
 
         Ok(TodoMapper::map_entity_to_todo(saved, items)?)
     }
@@ -78,7 +78,7 @@ impl TodoRepository for TodoRepositoryImpl {
         let model = todo_item_entity::Entity::find_by_id(item_id)
             .one(&self.db)
             .await
-            .map_err(DatabaseError::QueryError)?;
+            .map_err(DatabaseErrorCode::QueryError)?;
 
         Ok(model
             .map(|m| TodoMapper::map_entity_to_item(m))
@@ -90,7 +90,7 @@ impl TodoRepository for TodoRepositoryImpl {
             .filter(todo_item_entity::Column::TodoId.eq(todo_id))
             .all(&self.db)
             .await
-            .map_err(DatabaseError::QueryError)?;
+            .map_err(DatabaseErrorCode::QueryError)?;
 
         let items = models
             .into_iter()
@@ -111,7 +111,7 @@ impl TodoRepository for TodoRepositoryImpl {
         let saved = model
             .insert(&self.db)
             .await
-            .map_err(DatabaseError::QueryError)?;
+            .map_err(DatabaseErrorCode::QueryError)?;
 
         TodoMapper::map_entity_to_item(saved)
     }
@@ -122,7 +122,7 @@ impl TodoRepository for TodoRepositoryImpl {
         let saved = active
             .update(&self.db)
             .await
-            .map_err(DatabaseError::QueryError)?;
+            .map_err(DatabaseErrorCode::QueryError)?;
 
         TodoMapper::map_entity_to_item(saved)
     }
@@ -131,7 +131,7 @@ impl TodoRepository for TodoRepositoryImpl {
         todo_item_entity::Entity::delete_by_id(item_id)
             .exec(&self.db)
             .await
-            .map_err(DatabaseError::QueryError)?;
+            .map_err(DatabaseErrorCode::QueryError)?;
 
         Ok(())
     }

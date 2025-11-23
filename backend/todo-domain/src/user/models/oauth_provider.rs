@@ -1,6 +1,6 @@
 use std::str::FromStr;
-use crate::user::error::UserError;
-use UserError::InvalidProvider;
+use crate::user::user_error_code::UserErrorCode;
+use UserErrorCode::InvalidProvider;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum OAuthProvider {
@@ -16,7 +16,7 @@ impl OAuthProvider {
 }
 
 impl FromStr for OAuthProvider {
-    type Err = UserError;
+    type Err = UserErrorCode;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {

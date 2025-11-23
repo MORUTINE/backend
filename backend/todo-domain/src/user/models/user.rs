@@ -1,4 +1,4 @@
-use crate::user::error::UserError;
+use crate::user::user_error_code::UserErrorCode;
 use chrono::{DateTime, Utc};
 use derive_builder::Builder;
 
@@ -12,9 +12,9 @@ pub struct User {
 }
 
 impl User {
-    pub fn new(nickname: String, profile_image_url: Option<String>) -> Result<Self, UserError> {
+    pub fn new(nickname: String, profile_image_url: Option<String>) -> Result<Self, UserErrorCode> {
         if nickname.trim().is_empty() {
-            return Err(UserError::InvalidNickname);
+            return Err(UserErrorCode::InvalidNickname);
         }
 
         let now = Utc::now();

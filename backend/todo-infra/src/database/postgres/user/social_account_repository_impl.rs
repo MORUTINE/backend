@@ -1,4 +1,4 @@
-use crate::database::error::DatabaseError;
+use crate::database::database_error_code::DatabaseErrorCode;
 use crate::database::postgres::user::social_account_entity;
 use crate::database::postgres::user::social_account_mapper::SocialAccountMapper;
 use anyhow::Error;
@@ -28,7 +28,7 @@ impl SocialAccountRepository for SocialAccountRepositoryImpl {
             .filter(social_account_entity::Column::ProviderUserId.eq(provider_user_id))
             .one(&self.db)
             .await
-            .map_err(DatabaseError::QueryError)?;
+            .map_err(DatabaseErrorCode::QueryError)?;
 
         Ok(social_account
             .map(|s| SocialAccountMapper::map_to_model(s))
@@ -45,7 +45,7 @@ impl SocialAccountRepository for SocialAccountRepositoryImpl {
             .filter(social_account_entity::Column::Provider.eq(provider.as_str().to_string()))
             .one(&self.db)
             .await
-            .map_err(DatabaseError::QueryError)?;
+            .map_err(DatabaseErrorCode::QueryError)?;
 
         Ok(social_account
             .map(|s| SocialAccountMapper::map_to_model(s))
@@ -58,7 +58,7 @@ impl SocialAccountRepository for SocialAccountRepositoryImpl {
         let saved = social_account
             .insert(&self.db)
             .await
-            .map_err(DatabaseError::QueryError)?;
+            .map_err(DatabaseErrorCode::QueryError)?;
 
         Ok(SocialAccountMapper::map_to_model(saved)?)
     }

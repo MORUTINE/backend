@@ -1,4 +1,4 @@
-use crate::todo::error::TodoError;
+use crate::todo::todo_error_code::TodoErrorCode;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TodoItemStatus {
@@ -20,15 +20,15 @@ impl TodoItemStatus {
 }
 
 impl TryFrom<&str> for TodoItemStatus {
-    type Error = TodoError;
+    type Error = TodoErrorCode;
 
-    fn try_from(value: &str) -> Result<Self, TodoError> {
+    fn try_from(value: &str) -> Result<Self, TodoErrorCode> {
         match value {
             "PENDING" => Ok(TodoItemStatus::Pending),
             "COMPLETED" => Ok(TodoItemStatus::Completed),
             "ALTERED" => Ok(TodoItemStatus::Altered),
             "FAILED" => Ok(TodoItemStatus::Failed),
-            _ => Err(TodoError::InvalidStatus),
+            _ => Err(TodoErrorCode::InvalidStatus),
         }
     }
 }

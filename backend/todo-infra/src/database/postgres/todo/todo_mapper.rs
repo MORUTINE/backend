@@ -1,5 +1,5 @@
 use super::{todo_entity, todo_item_entity};
-use domain::todo::error::TodoError;
+use domain::todo::todo_error_code::TodoErrorCode;
 use domain::todo::models::{todo::Todo, todo_item::TodoItem};
 use domain::todo::models::{
     todo::TodoBuilder, todo_item::TodoItemBuilder, todo_item_status::TodoItemStatus,
@@ -35,7 +35,7 @@ impl TodoMapper {
     pub fn map_entity_to_todo(
         todo: todo_entity::Model,
         items: Vec<todo_item_entity::Model>,
-    ) -> Result<Todo, TodoError> {
+    ) -> Result<Todo, TodoErrorCode> {
         let mut item_models = Vec::new();
 
         for i in items {
@@ -51,7 +51,7 @@ impl TodoMapper {
                 .created_at(i.created_at.into())
                 .modified_at(i.modified_at.into())
                 .build()
-                .map_err(|_| TodoError::InvalidStatus)?;
+                .map_err(|_| TodoErrorCode::InvalidStatus)?;
 
             item_models.push(item);
         }
@@ -64,7 +64,7 @@ impl TodoMapper {
             .created_at(todo.created_at.into())
             .modified_at(todo.modified_at.into())
             .build()
-            .map_err(|_| TodoError::InvalidStatus)?;
+            .map_err(|_| TodoErrorCode::InvalidStatus)?;
 
         Ok(todo_model)
     }

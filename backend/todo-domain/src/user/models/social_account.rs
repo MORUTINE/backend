@@ -1,4 +1,4 @@
-use crate::user::error::UserError;
+use crate::user::user_error_code::UserErrorCode;
 use crate::user::models::oauth_provider::OAuthProvider;
 use chrono::{DateTime, Utc};
 use derive_builder::Builder;
@@ -18,9 +18,9 @@ impl SocialAccount {
         user_id: i64,
         provider: OAuthProvider,
         provider_user_id: String,
-    ) -> Result<Self, UserError> {
+    ) -> Result<Self, UserErrorCode> {
         if provider_user_id.trim().is_empty() {
-            return Err(UserError::InvalidProviderUserId);
+            return Err(UserErrorCode::InvalidProviderUserId);
         }
 
         let now = Utc::now();

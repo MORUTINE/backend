@@ -5,7 +5,7 @@ use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, QueryFilter};
 use domain::user::models::user::User;
 use domain::user::repository::user_repository::UserRepository;
 
-use crate::database::error::DatabaseError;
+use crate::database::database_error_code::DatabaseErrorCode;
 use crate::database::postgres::user::user_entity;
 use crate::database::postgres::user::user_mapper::UserMapper;
 
@@ -25,7 +25,7 @@ impl UserRepository for UserRepositoryImpl {
         let user = user_entity::Entity::find_by_id(id)
             .one(&self.db)
             .await
-            .map_err(DatabaseError::QueryError)?;
+            .map_err(DatabaseErrorCode::QueryError)?;
 
         Ok(user.map(|u| UserMapper::map_to_model(u)).transpose()?)
     }
@@ -35,7 +35,7 @@ impl UserRepository for UserRepositoryImpl {
             .filter(user_entity::Column::Nickname.eq(nickname))
             .one(&self.db)
             .await
-            .map_err(DatabaseError::QueryError)?;
+            .map_err(DatabaseErrorCode::QueryError)?;
 
         Ok(user.map(|u| UserMapper::map_to_model(u)).transpose()?)
     }
@@ -46,7 +46,7 @@ impl UserRepository for UserRepositoryImpl {
         let saved = user
             .insert(&self.db)
             .await
-            .map_err(DatabaseError::QueryError)?;
+            .map_err(DatabaseErrorCode::QueryError)?;
 
         Ok(UserMapper::map_to_model(saved)?)
     }
@@ -57,7 +57,7 @@ impl UserRepository for UserRepositoryImpl {
         let updated = user
             .update(&self.db)
             .await
-            .map_err(DatabaseError::QueryError)?;
+            .map_err(DatabaseErrorCode::QueryError)?;
 
         Ok(UserMapper::map_to_model(updated)?)
     }
@@ -66,7 +66,7 @@ impl UserRepository for UserRepositoryImpl {
         user_entity::Entity::delete_by_id(id)
             .exec(&self.db)
             .await
-            .map_err(DatabaseError::QueryError)?;
+            .map_err(DatabaseErrorCode::QueryError)?;
 
         Ok(())
     }

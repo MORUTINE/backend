@@ -1,4 +1,4 @@
-use crate::todo::error::TodoError;
+use crate::todo::todo_error_code::TodoErrorCode;
 use crate::todo::models::todo_item::TodoItem;
 use crate::todo::{
     EmptyContent, ItemNotFound, MaxItemLimit, PastDateNotAllowed, StateChangeNotAllowed,
@@ -17,7 +17,7 @@ pub struct Todo {
 }
 
 impl Todo {
-    pub fn new(user_id: i64, date: NaiveDate) -> Result<Self, TodoError> {
+    pub fn new(user_id: i64, date: NaiveDate) -> Result<Self, TodoErrorCode> {
         let today = Utc::now().date_naive();
 
         if date < today {
@@ -34,7 +34,7 @@ impl Todo {
         })
     }
 
-    pub fn add_item(&mut self, content: &str) -> Result<(), TodoError> {
+    pub fn add_item(&mut self, content: &str) -> Result<(), TodoErrorCode> {
         self.validate_creatable()?;
 
         if self.items.len() >= 3 {
@@ -51,7 +51,7 @@ impl Todo {
         &mut self,
         item_id: i64,
         new_content: &str,
-    ) -> Result<(), TodoError> {
+    ) -> Result<(), TodoErrorCode> {
         self.validate_editable()?;
 
         if new_content.trim().is_empty() {
@@ -65,7 +65,7 @@ impl Todo {
         Ok(())
     }
 
-    pub fn complete_item(&mut self, item_id: i64) -> Result<(), TodoError> {
+    pub fn complete_item(&mut self, item_id: i64) -> Result<(), TodoErrorCode> {
         self.validate_state_modifiable()?;
         let item = self.find_mut_item(item_id)?;
         item.completed();
@@ -73,7 +73,7 @@ impl Todo {
         Ok(())
     }
 
-    pub fn alter_item(&mut self, item_id: i64, content: &str) -> Result<(), TodoError> {
+    pub fn alter_item(&mut self, item_id: i64, content: &str) -> Result<(), TodoErrorCode> {
         self.validate_state_modifiable()?;
         let item = self.find_mut_item(item_id)?;
         item.altered(content);
@@ -81,7 +81,7 @@ impl Todo {
         Ok(())
     }
 
-    pub fn fail_item(&mut self, item_id: i64) -> Result<(), TodoError> {
+    pub fn fail_item(&mut self, item_id: i64) -> Result<(), TodoErrorCode> {
         self.validate_state_modifiable()?;
         let item = self.find_mut_item(item_id)?;
         item.failed();
@@ -90,7 +90,7 @@ impl Todo {
     }
 
     /// 오늘이나 미래의 할 일만 추가할 수 있다.
-    fn validate_creatable(&self) -> Result<(), TodoError> {
+    fn validate_creatable(&self) -> Result<(), TodoErrorCode> {
         let today = Utc::now().date_naive();
 
         if self.date < today {
@@ -101,7 +101,7 @@ impl Todo {
     }
 
     /// 당일이 되기 전에는 얼마든지 수정/삭제 가능하다.
-    fn validate_editable(&self) -> Result<(), TodoError> {
+    fn validate_editable(&self) -> Result<(), TodoErrorCode> {
         let today = Utc::now().date_naive();
         if self.date <= today {
             Err(PastDateNotAllowed)
@@ -111,7 +111,7 @@ impl Todo {
     }
 
     /// 할 일의 상태 변경은 당일부터 가능하다.
-    fn validate_state_modifiable(&self) -> Result<(), TodoError> {
+    fn validate_state_modifiable(&self) -> Result<(), TodoErrorCode> {
         let today = Utc::now().date_naive();
         if self.date > today {
             Err(StateChangeNotAllowed)
@@ -120,7 +120,7 @@ impl Todo {
         }
     }
 
-    fn find_mut_item(&mut self, item_id: i64) -> Result<&mut TodoItem, TodoError> {
+    fn find_mut_item(&mut self, item_id: i64) -> Result<&mut TodoItem, TodoErrorCode> {
         self.items
             .iter_mut()
             .find(|item| item.id() == Some(item_id))
@@ -152,7 +152,7 @@ mod tests {
     use super::*;
     use crate::todo::models::todo_item::TodoItemBuilder;
     use crate::todo::models::todo_item_status::TodoItemStatus;
-    use TodoError::MaxItemLimit;
+    use TodoErrorCode::MaxItemLimit;
     use TodoItemStatus::{Altered, Completed, Failed};
 
     fn past_date() -> NaiveDate {
