@@ -18,5 +18,5 @@ pub trait SocialAccountRepository {
         provider: &OAuthProvider,
     ) -> Result<Option<SocialAccount>, anyhow::Error>;
 
-    async fn save(&self, social_account: &SocialAccount) -> Result<SocialAccount, anyhow::Error>;
+    async fn insert(&self, social_account: &SocialAccount) -> Result<SocialAccount, anyhow::Error>;
 }

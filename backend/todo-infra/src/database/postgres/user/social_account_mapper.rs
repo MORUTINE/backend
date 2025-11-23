@@ -11,7 +11,7 @@ impl SocialAccountMapper {
         social_account_entity::ActiveModel {
             id: model.id().map(Set).unwrap_or(NotSet),
             user_id: Set(model.user_id()),
-            provider: Set(model.provider().as_str().to_string()),
+            provider: Set(model.provider().as_str().into()),
             provider_user_id: Set(model.provider_user_id().to_string()),
             created_at: Set(model.created_at().into()),
             modified_at: Set(model.modified_at().into()),

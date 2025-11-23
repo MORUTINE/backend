@@ -52,7 +52,7 @@ impl SocialAccountRepository for SocialAccountRepositoryImpl {
             .transpose()?)
     }
 
-    async fn save(&self, social_account: &SocialAccount) -> Result<SocialAccount, Error> {
+    async fn insert(&self, social_account: &SocialAccount) -> Result<SocialAccount, Error> {
         let social_account = SocialAccountMapper::map_to_entity(social_account);
 
         let saved = social_account

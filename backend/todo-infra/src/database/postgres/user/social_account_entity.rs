@@ -1,4 +1,5 @@
 use sea_orm::entity::prelude::*;
+use crate::database::postgres::user::user_entity;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel)]
 #[sea_orm(table_name = "social_accounts")]
@@ -13,11 +14,24 @@ pub struct Model {
 }
 
 #[derive(Copy, Clone, Debug, EnumIter)]
-pub enum Relation {}
+pub enum Relation {
+    Users
+}
 
 impl RelationTrait for Relation {
     fn def(&self) -> RelationDef {
-        unreachable!()
+        match self {
+            Relation::Users => Entity::belongs_to(user_entity::Entity)
+                .from(Column::UserId)
+                .to(user_entity::Column::Id)
+                .into(),
+        }
+    }
+}
+
+impl Related<user_entity::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Users.def()
     }
 }
 
