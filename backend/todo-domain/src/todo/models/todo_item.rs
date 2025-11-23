@@ -1,8 +1,8 @@
 use crate::todo::error::TodoError::{self, EmptyContent};
 use crate::todo::models::todo_item_status::TodoItemStatus;
+use TodoItemStatus::{Altered, Completed, Failed, Pending};
 use chrono::{DateTime, Utc};
 use derive_builder::Builder;
-use TodoItemStatus::{Altered, Completed, Failed, Pending};
 
 #[derive(Debug, Clone, Builder)]
 pub struct TodoItem {
