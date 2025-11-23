@@ -5,4 +5,5 @@ pub enum TodoError {
     PastDateNotAllowed,
     ItemNotFound,
     StateChangeNotAllowed,
+    InvalidStatus,
 }
