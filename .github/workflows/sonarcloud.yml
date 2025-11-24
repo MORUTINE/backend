@@ -30,7 +30,7 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
+        with: 
           args: >
             -Dsonar.projectBaseDir=backend
             -Dsonar.projectKey=backend
