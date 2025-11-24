@@ -1,5 +1,5 @@
 use crate::bootstrap::config::AppConfig;
-use tracing_subscriber::{EnvFilter, fmt};
+use tracing_subscriber::EnvFilter;
 
 pub fn init_logger(config: &AppConfig) {
     let level = config.logging.level.to_string();
