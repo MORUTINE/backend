@@ -50,6 +50,6 @@ jobs:
         with:
           args: >
             -Dsonar.projectBaseDir=backend  
-            -Dsonar.projectKey=zzaekkii_challenge-to-do
-            -Dsonar.organization=zzaekkii
+            -Dsonar.projectKey=morutine_backend
+            -Dsonar.organization=morutine
             -Dsonar.javascript.lcov.reportPaths=coverage.lcov
