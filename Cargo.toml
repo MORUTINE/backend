@@ -1,0 +1,3 @@
+[workspace]
+members = ["morutine-api", "morutine-domain", "morutine-infra", "morutine-common"]
+resolver = "2"

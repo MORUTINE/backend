@@ -1,3 +1,0 @@
-[workspace]
-members = ["todo-api", "todo-domain", "todo-infra", "todo-common"]
-resolver = "2"

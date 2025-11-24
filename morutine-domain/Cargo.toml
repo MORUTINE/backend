@@ -7,7 +7,7 @@ edition = "2024"
 derive_builder = "0.20"
 chrono = { version = "0.4", features = ["clock"] }
 
-common = { path = "../todo-common" }
+common = { path = "../morutine-common" }
 anyhow = "1.0.100"
 async-trait = "0.1.89"
 thiserror = "2.0.17"
