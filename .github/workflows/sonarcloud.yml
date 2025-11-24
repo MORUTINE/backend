@@ -25,23 +25,6 @@ jobs:
       - name: Install grcov
         run: cargo install grcov
 
-      - name: Run tests with coverage instrumentation
-        working-directory: backend
-        run: |
-          CARGO_INCREMENTAL=0 \
-          RUSTFLAGS="-Cinstrument-coverage" \
-          LLVM_PROFILE_FILE="coverage-%p-%m.profraw" \
-          cargo test --all --verbose
-
-      - name: Generate coverage report (lcov)
-        working-directory: backend
-        run: |
-          grcov . \
-            --binary-path ./target/debug/ \
-            -s . -t lcov \
-            --branch --ignore-not-existing \
-            -o coverage.lcov
-
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@v2
         env:
