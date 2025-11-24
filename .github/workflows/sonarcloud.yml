@@ -32,7 +32,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with: 
           args: >
-            -Dsonar.projectBaseDir=backend
+            -Dsonar.projectBaseDir=.
             -Dsonar.projectKey=backend
             -Dsonar.organization=morutine
             -Dsonar.javascript.lcov.reportPaths=coverage.lcov
