@@ -6,9 +6,9 @@ use axum::{
 use serde_json::json;
 
 use crate::common::error::app_error::AppError;
-use crate::common::error::postgres_error_wrapper::PostgresApiError;
+use crate::common::error::database_error_wrapper::DatabaseApiError;
 use common::error::{CommonErrorCode, ErrorCode};
-use infra::database::postgres::PostgresError;
+use infra::database::database_error_code::DatabaseErrorCode;
 
 // AppError<E> -> HTTP Response
 impl<E: ErrorCode> IntoResponse for AppError<E> {
@@ -26,12 +26,12 @@ impl<E: ErrorCode> IntoResponse for AppError<E> {
 }
 
 // PostgresError -> HTTP Response
-impl IntoResponse for PostgresApiError {
+impl IntoResponse for DatabaseApiError {
     fn into_response(self) -> Response {
         let app_error: AppError<CommonErrorCode> = match self.0 {
-            PostgresError::UniqueViolation => AppError::new(CommonErrorCode::Conflict),
+            DatabaseErrorCode::UniqueViolation(_) => AppError::new(CommonErrorCode::Conflict),
 
-            PostgresError::NotFound => AppError::new(CommonErrorCode::NotFound),
+            DatabaseErrorCode::NotFound => AppError::new(CommonErrorCode::NotFound),
 
             _ => AppError::new(CommonErrorCode::InternalServerError),
         };
