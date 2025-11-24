@@ -1,6 +1,6 @@
-use thiserror::Error;
 use common::constant::status::BAD_REQUEST;
 use common::error::{ErrorCode, ErrorReason};
+use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub enum UserErrorCode {

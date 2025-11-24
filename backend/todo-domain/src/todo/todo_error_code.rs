@@ -1,6 +1,6 @@
-use thiserror::Error;
 use common::constant::status::{BAD_REQUEST, CONFLICT, FORBIDDEN, NOT_FOUND};
 use common::error::{ErrorCode, ErrorReason};
+use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub enum TodoErrorCode {
@@ -54,4 +54,3 @@ impl ErrorCode for TodoErrorCode {
         }
     }
 }
-

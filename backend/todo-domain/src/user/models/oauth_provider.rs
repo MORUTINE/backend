@@ -1,6 +1,6 @@
-use std::str::FromStr;
 use crate::user::user_error_code::UserErrorCode;
 use UserErrorCode::InvalidProvider;
+use std::str::FromStr;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum OAuthProvider {

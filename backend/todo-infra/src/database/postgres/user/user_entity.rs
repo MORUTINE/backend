@@ -1,5 +1,5 @@
-use sea_orm::entity::prelude::*;
 use crate::database::postgres::user::social_account_entity;
+use sea_orm::entity::prelude::*;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel)]
 #[sea_orm(table_name = "users")]

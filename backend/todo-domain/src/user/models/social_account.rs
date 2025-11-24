@@ -1,5 +1,5 @@
-use crate::user::user_error_code::UserErrorCode;
 use crate::user::models::oauth_provider::OAuthProvider;
+use crate::user::user_error_code::UserErrorCode;
 use chrono::{DateTime, Utc};
 use derive_builder::Builder;
 

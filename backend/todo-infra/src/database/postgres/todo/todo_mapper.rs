@@ -1,9 +1,9 @@
 use super::{todo_entity, todo_item_entity};
-use domain::todo::todo_error_code::TodoErrorCode;
 use domain::todo::models::{todo::Todo, todo_item::TodoItem};
 use domain::todo::models::{
     todo::TodoBuilder, todo_item::TodoItemBuilder, todo_item_status::TodoItemStatus,
 };
+use domain::todo::todo_error_code::TodoErrorCode;
 use sea_orm::{NotSet, Set};
 
 pub struct TodoMapper;

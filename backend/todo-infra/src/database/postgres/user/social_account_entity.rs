@@ -1,5 +1,5 @@
-use sea_orm::entity::prelude::*;
 use crate::database::postgres::user::user_entity;
+use sea_orm::entity::prelude::*;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel)]
 #[sea_orm(table_name = "social_accounts")]
@@ -15,7 +15,7 @@ pub struct Model {
 
 #[derive(Copy, Clone, Debug, EnumIter)]
 pub enum Relation {
-    Users
+    Users,
 }
 
 impl RelationTrait for Relation {

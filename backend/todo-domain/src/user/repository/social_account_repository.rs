@@ -1,6 +1,6 @@
-use async_trait::async_trait;
 use crate::user::models::oauth_provider::OAuthProvider;
 use crate::user::models::social_account::SocialAccount;
+use async_trait::async_trait;
 
 #[async_trait]
 pub trait SocialAccountRepository {

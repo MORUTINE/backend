@@ -1,5 +1,5 @@
-use async_trait::async_trait;
 use crate::user::models::user::User;
+use async_trait::async_trait;
 
 #[async_trait]
 pub trait UserRepository {

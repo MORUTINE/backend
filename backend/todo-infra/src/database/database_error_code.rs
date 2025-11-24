@@ -1,7 +1,7 @@
-use sea_orm::DbErr;
-use thiserror::Error;
 use common::constant::status::{CONFLICT, INTERNAL_SERVER_ERROR, NOT_FOUND};
 use common::error::{ErrorCode, ErrorReason};
+use sea_orm::DbErr;
+use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub enum DatabaseErrorCode {
