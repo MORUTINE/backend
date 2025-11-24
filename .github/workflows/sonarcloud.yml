@@ -46,7 +46,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          args: >
+          args: > 
             -Dsonar.projectKey=backend
             -Dsonar.organization=morutine
             -Dsonar.projectBaseDir=.
