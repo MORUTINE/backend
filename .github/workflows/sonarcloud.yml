@@ -1,7 +1,13 @@
 name: Sonar Coverage
 
 on:
-# ... (생략)
+  push:
+    branches:
+      - develop
+  pull_request:
+    branches:
+      - develop
+
 jobs:
   sonar:
     runs-on: ubuntu-22.04
@@ -24,7 +30,7 @@ jobs:
           CARGO_INCREMENTAL=0 \
           RUSTFLAGS="-Cinstrument-coverage" \
           LLVM_PROFILE_FILE="coverage-%p-%m.profraw" \
-          cargo test --all --verbose # 4천 줄이므로 --all을 다시 시도합니다.
+          cargo test --all --verbose
 
       - name: Generate coverage report (cobertura xml)
         run: |
