@@ -32,13 +32,16 @@ jobs:
           LLVM_PROFILE_FILE="coverage-%p-%m.profraw" \
           cargo test --all --verbose
 
-      - name: Generate coverage report (lcov)
+      - name: Generate coverage report (cobertura xml)
         run: |
           grcov . \
             --binary-path ./target/debug/ \
-            -s . -t lcov \
+            -s . -t cobertura \
             --branch --ignore-not-existing \
-            -o coverage.lcov
+            -o coverage.xml
+
+      - name: Set up PATH for SonarCloud
+        run: echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@v2
@@ -46,8 +49,8 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          args: > 
+          args: >
             -Dsonar.projectKey=MORUTINE_backend
             -Dsonar.organization=morutine
             -Dsonar.projectBaseDir=.
-            -Dsonar.coverageReportPaths=coverage.lcov
+            -Dsonar.coverageReportPaths=coverage.xml
