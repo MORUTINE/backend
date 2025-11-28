@@ -25,20 +25,20 @@ jobs:
       - name: Install grcov
         run: cargo install grcov
 
-      - name: Generate coverage
+      - name: Run tests with coverage instrumentation
         run: |
-          export CARGO_INCREMENTAL=0
-          export RUSTFLAGS="-Cinstrument-coverage"
-          export LLVM_PROFILE_FILE="coverage-%p-%m.profraw"
+          CARGO_INCREMENTAL=0 \
+          RUSTFLAGS="-Cinstrument-coverage" \
+          LLVM_PROFILE_FILE="coverage-%p-%m.profraw" \
+          cargo test --all --verbose
 
-          cargo test
-
-          grcov . --binary-path ./target/debug/ \
-            -s . \
-            -t lcov \
-            --branch \
-            --ignore-not-existing \
-            -o coverage.xml
+      - name: Generate coverage report (lcov)
+        run: |
+          grcov . \
+            --binary-path ./target/debug/ \
+            -s . -t lcov \
+            --branch --ignore-not-existing \
+            -o coverage.lcov
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@v2
@@ -50,4 +50,4 @@ jobs:
             -Dsonar.projectKey=MORUTINE_backend
             -Dsonar.organization=morutine
             -Dsonar.projectBaseDir=.
-            -Dsonar.coverageReportPaths=coverage.xml
+            -Dsonar.coverageReportPaths=coverage.lcov
