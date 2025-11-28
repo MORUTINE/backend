@@ -29,48 +29,38 @@ jobs:
         run: mkdir -p coverage
 
       - name: Run Tests with Coverage Instrumentation
-        env:
-          CARGO_INCREMENTAL: 0
-          RUSTFLAGS: "-Cinstrument-coverage"
-          LLVM_PROFILE_FILE: "coverage/coverage-%p-%m.profraw"
-        run: cargo test --all --verbose
+        run: |
+          CARGO_INCREMENTAL=0 \
+          RUSTFLAGS="-Cinstrument-coverage" \
+          LLVM_PROFILE_FILE="coverage/coverage-%p-%m.profraw"
+          cargo test --all --verbose
 
       - name: Generate Coverage Report (Cobertura XML)
         run: |
-          grcov ./coverage \
-            --binary-path ./target/debug/deps/ \
-            -s . \
+          GRCOV_SOURCES="morutine-api/src morutine-common/src morutine-domain/src morutine-infra/src"
+          
+          PROFRAW_FILES=$(find ./coverage -name "*.profraw")
+
+          grcov ${PROFRAW_FILES} \
+            --binary-path ./target/debug/ \
+            -s ${GRCOV_SOURCES} \
             -t cobertura \
-            --branch \
-            --ignore-not-existing \
-            --ignore "/*" \
-            --ignore "*/tests/*" \
-            --ignore "*/examples/*" \
+            --branch --ignore-not-existing \
             -o coverage.xml
 
       - name: Fix Cobertura XML format
         run: |
-          # 1. DOCTYPE 제거 (이전 오류 해결)
           sed -i 's/<!DOCTYPE coverage SYSTEM "http:\/\/cobertura\.sourceforge\.net\/xml\/coverage-04\.dtd">//' coverage.xml
-          # 💡 2. <sources> 태그 제거 (최종 오류 해결)
+          sed -i 's/version="1\.9"/version="1\.0"/g' coverage.xml
+          sed -i 's/version="1\.0"/version="1"/' coverage.xml
           sed -i '/<sources>/,/\/sources>/d' coverage.xml
-          # 3. version 속성 값 변경 (1.9 -> 1 치환)
-          sed -i 's/version="1\.9"/version="1"/' coverage.xml
-
-      - name: Delete all profraw files before SonarCloud scan
-        run: find . -name "*.profraw" -type f -delete
-
-      # 💡 Clippy/Cargo PATH 복구: 이전 워크플로우에서 누락되었던 필수 스텝
-      - name: Set up Runner PATH (for SonarCloud)
-        run: echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@v2
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Clippy/Cargo PATH 문제 해결을 위해 SonarScanner에게 PATH를 전달
-          PATH: ${{ env.PATH }}:${{ steps.install_rust.outputs.toolchain_path }}/bin
+          SONAR_SCANNER_OPTS: "-Dsonar.cfamily.clippy.path=/github/home/.cargo/bin"
         with:
           args: >
             -Dsonar.projectKey=MORUTINE_backend
