@@ -47,25 +47,27 @@ jobs:
 
       - name: Fix Cobertura XML format for SonarCloud
         run: |
-          # DTD 제거
-          sed -i 's/<!DOCTYPE[^>]*>//' coverage.xml
-          # XML 버전 수정
-          sed -i 's/<?xml version="[^"]*"?>/<?xml version="1.0" encoding="UTF-8"?>/' coverage.xml
-          # coverage 태그의 version 속성을 1로 변경
-          sed -i 's/<coverage[^>]*version="[^"]*"/<coverage version="1.0"/' coverage.xml
-          # sources 태그 제거
-          sed -i '/<sources>/,/<\/sources>/d' coverage.xml
-          # 나머지 속성들 정리
-          sed -i 's/<coverage version="1.0"[^>]*>/<coverage version="1.0">/' coverage.xml
+          # 모든 수정을 한 번에
+          sed -i \
+            -e 's/<!DOCTYPE[^>]*>//' \
+            -e 's/<?xml version="[^"]*"?>/<?xml version="1.0" encoding="UTF-8"?>/' \
+            -e 's/<coverage[^>]*>/<coverage version="1">/' \
+            -e '/<sources>/,/<\/sources>/d' \
+            coverage.xml
 
       - name: Verify fixed coverage.xml
         run: |
-          echo "=== First 30 lines of coverage.xml ==="
-          head -30 coverage.xml
+          echo "=== First 50 lines of coverage.xml ==="
+          head -50 coverage.xml
+          echo ""
+          echo "=== Full first line ==="
+          head -1 coverage.xml
+          echo ""
           echo "=== Checking for DOCTYPE ==="
           grep -c "DOCTYPE" coverage.xml || echo "No DOCTYPE found (good)"
-          echo "=== Checking version ==="
-          grep "version=" coverage.xml | head -5
+          echo ""
+          echo "=== Checking coverage tag ==="
+          grep -o "<coverage[^>]*>" coverage.xml | head -1
 
       - name: Delete profraw files
         run: find . -name "*.profraw" -type f -delete
