@@ -32,29 +32,21 @@ jobs:
           LLVM_PROFILE_FILE: "%m.profraw"
         run: cargo test --all --verbose
 
-      - name: Generate Coverage Report (Cobertura XML)
+      - name: Generate Coverage Report (lcov format)
         run: |
           grcov . \
             --binary-path ./target/debug/deps/ \
             -s . \
-            -t cobertura \
+            -t lcov \
             --branch \
             --ignore-not-existing \
             --ignore "/*" \
-            --excl-line "^\\s*((debug_)?assert(_eq|_ne)?!|#\\[derive\\()" \
-            -o coverage.xml
+            -o lcov.info
 
-      - name: Fix Cobertura XML for SonarCloud
+      - name: Convert lcov to Cobertura for SonarCloud
         run: |
-          python3 -c "
-          import xml.etree.ElementTree as ET
-          tree = ET.parse('coverage.xml')
-          root = tree.getroot()
-          root.set('version', '1')
-          for sources in root.findall('sources'):
-              root.remove(sources)
-          tree.write('coverage.xml', encoding='utf-8', xml_declaration=True)
-          "
+          pip install lcov_cobertura
+          lcov_cobertura lcov.info --output coverage.xml
 
       - name: Delete profraw files
         run: find . -name "*.profraw" -type f -delete
