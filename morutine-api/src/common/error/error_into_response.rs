@@ -18,7 +18,6 @@ impl<E: ErrorCode> IntoResponse for AppError<E> {
         let body = Json(json!({
             "code": reason.code,
             "message": reason.message,
-            "data": {}
         }));
 
         (StatusCode::from_u16(reason.status).unwrap(), body).into_response()
@@ -30,9 +29,7 @@ impl IntoResponse for DatabaseApiError {
     fn into_response(self) -> Response {
         let app_error: AppError<CommonErrorCode> = match self.0 {
             DatabaseErrorCode::UniqueViolation(_) => AppError::new(CommonErrorCode::Conflict),
-
             DatabaseErrorCode::NotFound => AppError::new(CommonErrorCode::NotFound),
-
             _ => AppError::new(CommonErrorCode::InternalServerError),
         };
 
