@@ -1,7 +1,12 @@
 name: Sonar Coverage
 
 on:
-# ... (생략)
+  push:
+    branches:
+      - develop
+  pull_request:
+    branches:
+      - develop
 
 jobs:
   sonar:
@@ -20,17 +25,15 @@ jobs:
       - name: Install grcov
         run: cargo install grcov --force
 
-      - name: Run Tests with Coverage Instrumentation (Limited Scope)
+      - name: Run Tests with Coverage Instrumentation
         run: |
           CARGO_INCREMENTAL=0 \
           RUSTFLAGS="-Cinstrument-coverage" \
           LLVM_PROFILE_FILE="coverage-%p-%m.profraw" \
-          # 💡 리포트 크기 20MB 초과 문제를 해결하기 위해 가장 큰 크레이트 하나만 테스트
           cargo test -p morutine-api --verbose
 
       - name: Generate Coverage Report (Cobertura XML)
         run: |
-          # 💡 테스트를 morutine-api로 제한했으므로, 소스 경로도 morutine-api만 지정
           GRCOV_SOURCES="morutine-api/src" 
           
           grcov . \
@@ -42,7 +45,6 @@ jobs:
 
       - name: Fix Cobertura Version for SonarCloud
         run: |
-          # 💡 가장 안전한 방법으로 최종 버전 1을 만들기 위해 1.9, 1.0 치환 모두 실행
           sed -i 's/version="1\.9"/version="1\.0"/g' coverage.xml
           sed -i 's/version="1\.0"/version="1"/g' coverage.xml
 
