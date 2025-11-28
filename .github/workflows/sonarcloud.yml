@@ -10,6 +10,7 @@ on:
 
 jobs:
   sonar:
+    # 무료 러너 중 안정성이 높은 ubuntu-22.04로 변경 (권장)
     runs-on: ubuntu-22.04
 
     steps:
@@ -20,11 +21,12 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
-          # llvm-tools-preview 컴포넌트 설치
+          # grcov에 필요한 llvm-tools-preview 컴포넌트 설치
           components: clippy, llvm-tools-preview
 
-      - name: Install grcov
-        run: cargo install grcov
+      - name: Install grcov (with force update)
+        # 💡 grcov 구문 오류 해결을 위해 최신 버전을 강제 설치합니다.
+        run: cargo install grcov --force
 
       - name: Run tests with coverage instrumentation
         run: |
@@ -33,16 +35,18 @@ jobs:
           LLVM_PROFILE_FILE="coverage-%p-%m.profraw" \
           cargo test --all --verbose
 
-      - name: Generate coverage report (cobertura xml 1.0)
+      - name: Generate coverage report (cobertura xml)
         run: |
+          # 💡 소스 코드 분석 범위를 프로젝트 크레이트로 제한하여 메모리 부족 문제를 해결합니다.
           GRCOV_SOURCES="morutine-api/src morutine-common/src morutine-domain/src morutine-infra/src"
           
           grcov . \
             --binary-path ./target/debug/ \
             -s ${GRCOV_SOURCES} \
-            -t cobertura --llvm --cobertura-version 1.0 \
+            # 💡 이전 오류를 발생시킨 --cobertura-version 옵션을 제거합니다.
+            -t cobertura --llvm \ 
             --branch --ignore-not-existing \
-            --jobs 1 \  # 병렬 처리 제한으로 메모리 사용량 최소화
+            --jobs 1 \  # 메모리 사용량 최소화를 위해 병렬 처리 제한
             -o coverage.xml
 
       # SonarCloud Scan 컨테이너가 cargo를 찾게 PATH 설정
