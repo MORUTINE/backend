@@ -52,8 +52,8 @@ jobs:
         run: |
           # DOCTYPE 제거
           sed -i 's/<!DOCTYPE coverage SYSTEM "http:\/\/cobertura\.sourceforge\.net\/xml\/coverage-04\.dtd">//' coverage.xml
-          # coverage 태그의 version 속성을 "1"로 변경
-          sed -i 's/<coverage version="[0-9.]*"/<coverage version="1"/' coverage.xml
+          # version 속성 값만 변경 (속성 이름은 유지)
+          sed -i 's/version="1\.9"/version="1"/' coverage.xml
 
       - name: Delete all profraw files before SonarCloud scan
         run: find . -name "*.profraw" -type f -delete
