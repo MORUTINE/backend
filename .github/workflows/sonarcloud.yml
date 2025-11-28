@@ -35,10 +35,12 @@ jobs:
 
       - name: Generate coverage report (cobertura xml 1.0)
         run: |
+          GRCOV_SOURCES="morutine-api/src morutine-common/src morutine-domain/src morutine-infra/src"
+          
           grcov . \
             --binary-path ./target/debug/ \
-            # SonarCloud 파서 호환성 (이전 오류 해결)
-            -s . -t cobertura --llvm --cobertura-version 1.0 \
+            -s ${GRCOV_SOURCES} \
+            -t cobertura --llvm --cobertura-version 1.0 \
             --branch --ignore-not-existing \
             --jobs 1 \  # 병렬 처리 제한으로 메모리 사용량 최소화
             -o coverage.xml
