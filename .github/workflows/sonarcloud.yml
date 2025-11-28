@@ -29,20 +29,20 @@ jobs:
         run: |
           CARGO_INCREMENTAL=0 \
           RUSTFLAGS="-Cinstrument-coverage" \
-          # profraw 파일을 저장할 디렉토리 생성
+          # .profraw 파일을 저장할 디렉토리 생성
           mkdir -p coverage
-          # profraw 파일의 저장 경로를 명시하여 grcov가 찾을 수 있도록 함
+          # profraw 파일을 명시적 디렉토리(coverage/)에 생성하도록 지정
           LLVM_PROFILE_FILE="coverage/coverage-%p-%m.profraw" \
-          # 모든 크레이트 테스트 실행 (패키지 이름 오류 방지)
           cargo test --all --verbose
 
       - name: Generate Coverage Report (Cobertura XML)
         run: |
-          # 모든 크레이트의 소스 경로를 명시적으로 지정 (리포트 크기 제어)
           GRCOV_SOURCES="morutine-api/src morutine-common/src morutine-domain/src morutine-infra/src"
           
-          # grcov에게 profraw 파일이 있는 디렉토리(./coverage/)를 명시적으로 전달
-          grcov ./coverage/ \
+          # 💡 최종 안정화: find 명령어로 모든 .profraw 파일을 찾은 후 grcov에 목록으로 전달하여 "No input files found" Panic 해결
+          PROFRAW_FILES=$(find ./coverage -name "*.profraw")
+
+          grcov ${PROFRAW_FILES} \
             --binary-path ./target/debug/ \
             -s ${GRCOV_SOURCES} \
             -t cobertura \
@@ -51,7 +51,7 @@ jobs:
 
       - name: Fix Cobertura Version for SonarCloud
         run: |
-          # Cobertura XML 버전 충돌 수정 (SonarCloud 호환성 확보)
+          # Cobertura XML 버전 충돌 수정 (1.9 -> 1.0 -> 1)
           sed -i 's/version="1\.9"/version="1\.0"/g' coverage.xml
           sed -i 's/version="1\.0"/version="1"/g' coverage.xml
 
@@ -63,7 +63,6 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Clippy 경로 문제 해결
           SONAR_SCANNER_OPTS: "-Dsonar.cfamily.clippy.path=/github/home/.cargo/bin"
         with:
           args: >
