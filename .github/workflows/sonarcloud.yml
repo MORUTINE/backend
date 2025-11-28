@@ -50,19 +50,27 @@ jobs:
 
       - name: Fix Cobertura XML format
         run: |
-          # DOCTYPE 제거
+          # 1. DOCTYPE 제거 (이전 오류 해결)
           sed -i 's/<!DOCTYPE coverage SYSTEM "http:\/\/cobertura\.sourceforge\.net\/xml\/coverage-04\.dtd">//' coverage.xml
-          # version 속성 값만 변경 (속성 이름은 유지)
+          # 💡 2. <sources> 태그 제거 (최종 오류 해결)
+          sed -i '/<sources>/,/\/sources>/d' coverage.xml
+          # 3. version 속성 값 변경 (1.9 -> 1 치환)
           sed -i 's/version="1\.9"/version="1"/' coverage.xml
 
       - name: Delete all profraw files before SonarCloud scan
         run: find . -name "*.profraw" -type f -delete
+
+      # 💡 Clippy/Cargo PATH 복구: 이전 워크플로우에서 누락되었던 필수 스텝
+      - name: Set up Runner PATH (for SonarCloud)
+        run: echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@v2
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Clippy/Cargo PATH 문제 해결을 위해 SonarScanner에게 PATH를 전달
+          PATH: ${{ env.PATH }}:${{ steps.install_rust.outputs.toolchain_path }}/bin
         with:
           args: >
             -Dsonar.projectKey=MORUTINE_backend
