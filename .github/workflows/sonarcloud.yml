@@ -43,10 +43,38 @@ jobs:
             --ignore "/*" \
             -o lcov.info
 
-      - name: Convert lcov to Cobertura for SonarCloud
+      - name: Convert lcov to SonarCloud Generic Coverage format
         run: |
-          pip install lcov_cobertura
-          lcov_cobertura lcov.info --output coverage.xml
+          python3 << 'EOF'
+          import re
+          
+          coverage = {}
+          current_file = None
+          
+          with open('lcov.info', 'r') as f:
+              for line in f:
+                  if line.startswith('SF:'):
+                      current_file = line[3:].strip()
+                      if current_file not in coverage:
+                          coverage[current_file] = []
+                  elif line.startswith('DA:') and current_file:
+                      parts = line[3:].strip().split(',')
+                      if len(parts) >= 2:
+                          line_num = parts[0]
+                          hits = parts[1]
+                          coverage[current_file].append((line_num, hits))
+          
+          with open('coverage.xml', 'w') as f:
+              f.write('<?xml version="1.0" encoding="UTF-8"?>\n')
+              f.write('<coverage version="1">\n')
+              for filepath, lines in coverage.items():
+                  if lines:
+                      f.write(f'  <file path="{filepath}">\n')
+                      for line_num, hits in lines:
+                          f.write(f'    <lineToCover lineNumber="{line_num}" covered="{"true" if int(hits) > 0 else "false"}"/>\n')
+                      f.write('  </file>\n')
+              f.write('</coverage>\n')
+          EOF
 
       - name: Delete profraw files
         run: find . -name "*.profraw" -type f -delete
