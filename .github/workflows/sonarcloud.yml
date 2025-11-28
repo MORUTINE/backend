@@ -25,23 +25,18 @@ jobs:
       - name: Install grcov
         run: cargo install grcov --force
 
-      - name: Create coverage directory
-        run: mkdir -p coverage
-
       - name: Run Tests with Coverage Instrumentation
         run: |
           CARGO_INCREMENTAL=0 \
           RUSTFLAGS="-Cinstrument-coverage" \
-          LLVM_PROFILE_FILE="coverage/coverage-%p-%m.profraw"
           cargo test --all --verbose
 
       - name: Generate Coverage Report (Cobertura XML)
         run: |
           GRCOV_SOURCES="morutine-api/src morutine-common/src morutine-domain/src morutine-infra/src"
           
-          PROFRAW_FILES=$(find ./coverage -name "*.profraw")
-
-          grcov ${PROFRAW_FILES} \
+          find . -name "*.profraw" -print0 \
+            | xargs -0 grcov \
             --binary-path ./target/debug/ \
             -s ${GRCOV_SOURCES} \
             -t cobertura \
@@ -50,10 +45,14 @@ jobs:
 
       - name: Fix Cobertura XML format
         run: |
+          # XML 포맷 수정 (버전 충돌 및 태그 오류 해결)
           sed -i 's/<!DOCTYPE coverage SYSTEM "http:\/\/cobertura\.sourceforge\.net\/xml\/coverage-04\.dtd">//' coverage.xml
           sed -i 's/version="1\.9"/version="1\.0"/g' coverage.xml
           sed -i 's/version="1\.0"/version="1"/' coverage.xml
           sed -i '/<sources>/,/\/sources>/d' coverage.xml
+
+      - name: Set up Runner PATH
+        run: echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@v2
