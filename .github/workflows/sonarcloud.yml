@@ -10,38 +10,47 @@ on:
 
 jobs:
   sonar:
+    # 안정적인 최신 무료 러너 환경 사용
     runs-on: ubuntu-22.04
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Install Rust toolchain
+      - name: Install Rust Toolchain & Components
         uses: dtolnay/rust-toolchain@stable
         with:
+          # llvm-profdata 누락 오류 해결을 위한 필수 컴포넌트 설치
           components: clippy, llvm-tools-preview
 
       - name: Install grcov
+        # grcov 옵션 인식 오류 방지를 위해 최신 버전 강제 설치
         run: cargo install grcov --force
 
-      - name: Run tests with coverage instrumentation
+      - name: Run Tests with Coverage Instrumentation
         run: |
           CARGO_INCREMENTAL=0 \
           RUSTFLAGS="-Cinstrument-coverage" \
           LLVM_PROFILE_FILE="coverage-%p-%m.profraw" \
           cargo test --all --verbose
 
-      - name: Generate coverage report (cobertura xml)
+      - name: Generate Coverage Report (Cobertura XML)
         run: |
+          # 💡 소스 경로 목록 정의: 불필요한 의존성 코드 분석 방지
           GRCOV_SOURCES="morutine-api/src morutine-common/src morutine-domain/src morutine-infra/src"
           
           grcov . \
+            --binary-path ./target/debug/ \
             -s ${GRCOV_SOURCES} \
             -t cobertura \
             --branch --ignore-not-existing \
             -o coverage.xml
 
+      # --- SonarCloud Scan 환경 설정 ---
+
+      # 💡 Rust/Cargo PATH 오류 해결: Cargo 경로를 환경 변수에 추가 (Clippy Sensor 오류 방지)
       - name: Set up PATH for SonarCloud
         run: echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
@@ -50,6 +59,8 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # 💡 SonarCloud Docker 컨테이너에 Cargo 환경 PATH를 직접 주입
+          PATH: ${{ env.PATH }}:/github/home/.cargo/bin
         with:
           args: >
             -Dsonar.projectKey=MORUTINE_backend
