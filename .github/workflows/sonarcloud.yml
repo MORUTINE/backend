@@ -50,18 +50,42 @@ jobs:
 
       - name: Fix Cobertura XML format
         run: |
+          # DOCTYPE 제거
           sed -i '/<\!DOCTYPE/d' coverage.xml
+          # XML 버전을 4.0으로 고정
           sed -i 's/version="[0-9.]*"/version="4.0"/g' coverage.xml
+          # XML 선언과 루트 태그 사이에 줄바꿈이 없는 경우 수정
+          sed -i 's/\?>[ ]*</\?>\n</g' coverage.xml
 
-      - name: Verify coverage.xml exists and show content
+      - name: Verify and show coverage.xml content
         run: |
           if [ -f coverage.xml ]; then
-            echo "coverage.xml found"
-            head -20 coverage.xml
+            echo "=== coverage.xml found ==="
+            echo "First 50 lines:"
+            head -50 coverage.xml
+            echo ""
+            echo "=== File validation ==="
+            xmllint --noout coverage.xml && echo "XML is valid" || echo "XML is INVALID"
           else
             echo "ERROR: coverage.xml not found!"
             exit 1
           fi
+
+      - name: Install xmllint for validation
+        run: sudo apt-get update && sudo apt-get install -y libxml2-utils
+
+      - name: Validate and fix XML structure
+        run: |
+          # xmllint로 XML 검증 및 재포맷
+          xmllint --format coverage.xml > coverage_fixed.xml || {
+            echo "XML validation failed, trying to fix..."
+            # XML이 유효하지 않은 경우 강제로 수정
+            cat coverage.xml | grep -v '<!DOCTYPE' > coverage_fixed.xml
+          }
+          mv coverage_fixed.xml coverage.xml
+          
+          echo "=== Final coverage.xml (first 30 lines) ==="
+          head -30 coverage.xml
 
       - name: Delete all profraw files before SonarCloud scan
         run: find . -name "*.profraw" -type f -delete
