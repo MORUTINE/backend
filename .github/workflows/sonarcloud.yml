@@ -47,7 +47,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           args: > 
-            -Dsonar.projectKey=morutine_backend
+            -Dsonar.projectKey=morutine_backend 
             -Dsonar.organization=morutine
             -Dsonar.projectBaseDir=.
             -Dsonar.coverageReportPaths=lcov.info
