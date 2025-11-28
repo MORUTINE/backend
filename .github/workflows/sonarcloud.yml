@@ -25,48 +25,40 @@ jobs:
       - name: Install grcov
         run: cargo install grcov --force
 
+      - name: Create coverage directory
+        run: mkdir -p coverage
+
       - name: Run Tests with Coverage Instrumentation
-        run: |
-          CARGO_INCREMENTAL=0 \
-          RUSTFLAGS="-Cinstrument-coverage" \
-          # .profraw 파일을 저장할 디렉토리 생성
-          mkdir -p coverage
-          # profraw 파일을 명시적 디렉토리(coverage/)에 생성하도록 지정
-          LLVM_PROFILE_FILE="coverage/coverage-%p-%m.profraw" \
-          cargo test --all --verbose
+        env:
+          CARGO_INCREMENTAL: 0
+          RUSTFLAGS: "-Cinstrument-coverage"
+          LLVM_PROFILE_FILE: "coverage/coverage-%p-%m.profraw"
+        run: cargo test --all --verbose
 
       - name: Generate Coverage Report (Cobertura XML)
         run: |
-          GRCOV_SOURCES="morutine-api/src morutine-common/src morutine-domain/src morutine-infra/src"
-          
-          # 💡 최종 안정화: find 명령어로 모든 .profraw 파일을 찾은 후 grcov에 목록으로 전달하여 "No input files found" Panic 해결
-          PROFRAW_FILES=$(find ./coverage -name "*.profraw")
-
-          grcov ${PROFRAW_FILES} \
-            --binary-path ./target/debug/ \
-            -s ${GRCOV_SOURCES} \
+          grcov ./coverage \
+            --binary-path ./target/debug/deps/ \
+            -s . \
             -t cobertura \
-            --branch --ignore-not-existing \
+            --branch \
+            --ignore-not-existing \
+            --ignore "/*" \
+            --ignore "*/tests/*" \
+            --ignore "*/examples/*" \
             -o coverage.xml
 
       - name: Fix Cobertura Version for SonarCloud
         run: |
-          # Cobertura XML 버전 충돌 수정 (1.9 -> 1.0 -> 1)
-          sed -i 's/version="1\.9"/version="1\.0"/g' coverage.xml
-          sed -i 's/version="1\.0"/version="1"/g' coverage.xml
-
-      - name: Set up Runner PATH
-        run: echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+          sed -i 's/version="[0-9.]*"/version="1"/g' coverage.xml
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@v2
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_SCANNER_OPTS: "-Dsonar.cfamily.clippy.path=/github/home/.cargo/bin"
         with:
           args: >
             -Dsonar.projectKey=MORUTINE_backend
             -Dsonar.organization=morutine
-            -Dsonar.projectBaseDir=.
             -Dsonar.coverageReportPaths=coverage.xml
