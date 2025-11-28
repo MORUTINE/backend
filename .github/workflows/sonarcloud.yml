@@ -30,11 +30,13 @@ jobs:
           CARGO_INCREMENTAL=0 \
           RUSTFLAGS="-Cinstrument-coverage" \
           LLVM_PROFILE_FILE="coverage-%p-%m.profraw" \
-          cargo test -p morutine-api --verbose
+          # 모든 크레이트의 테스트 실행
+          cargo test --all --verbose
 
       - name: Generate Coverage Report (Cobertura XML)
         run: |
-          GRCOV_SOURCES="morutine-api/src" 
+          # 💡 모든 크레이트의 소스 경로를 명시적으로 지정
+          GRCOV_SOURCES="morutine-api/src morutine-common/src morutine-domain/src morutine-infra/src"
           
           grcov . \
             --binary-path ./target/debug/ \
@@ -45,6 +47,7 @@ jobs:
 
       - name: Fix Cobertura Version for SonarCloud
         run: |
+          # 1.9/1.0 버전 충돌 해결
           sed -i 's/version="1\.9"/version="1\.0"/g' coverage.xml
           sed -i 's/version="1\.0"/version="1"/g' coverage.xml
 
