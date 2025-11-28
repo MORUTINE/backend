@@ -35,8 +35,15 @@ jobs:
           LLVM_PROFILE_FILE: "coverage/coverage-%p-%m.profraw"
         run: cargo test --all --verbose
 
+      - name: Check profraw files
+        run: |
+          echo "=== Checking profraw files ==="
+          ls -lah coverage/
+          find ./coverage -name "*.profraw" -type f
+
       - name: Generate Coverage Report (Cobertura XML)
         run: |
+          echo "=== Running grcov ==="
           grcov ./coverage \
             --binary-path ./target/debug/deps/ \
             -s . \
@@ -47,6 +54,28 @@ jobs:
             --ignore "*/tests/*" \
             --ignore "*/examples/*" \
             -o coverage.xml
+          
+          echo "=== grcov completed ==="
+          ls -lah coverage.xml
+
+      - name: Verify coverage.xml was generated
+        run: |
+          if [ ! -f coverage.xml ]; then
+            echo "ERROR: coverage.xml was not created by grcov!"
+            exit 1
+          fi
+          
+          FILE_SIZE=$(stat -c%s coverage.xml)
+          echo "coverage.xml size: $FILE_SIZE bytes"
+          
+          if [ $FILE_SIZE -eq 0 ]; then
+            echo "ERROR: coverage.xml is empty!"
+            echo "Checking for errors in grcov execution..."
+            exit 1
+          fi
+          
+          echo "=== First 30 lines of coverage.xml ==="
+          head -30 coverage.xml
 
       - name: Fix Cobertura XML format
         run: |
@@ -54,38 +83,9 @@ jobs:
           sed -i '/<\!DOCTYPE/d' coverage.xml
           # XML 버전을 4.0으로 고정
           sed -i 's/version="[0-9.]*"/version="4.0"/g' coverage.xml
-          # XML 선언과 루트 태그 사이에 줄바꿈이 없는 경우 수정
-          sed -i 's/\?>[ ]*</\?>\n</g' coverage.xml
-
-      - name: Verify and show coverage.xml content
-        run: |
-          if [ -f coverage.xml ]; then
-            echo "=== coverage.xml found ==="
-            echo "First 50 lines:"
-            head -50 coverage.xml
-            echo ""
-            echo "=== File validation ==="
-            xmllint --noout coverage.xml && echo "XML is valid" || echo "XML is INVALID"
-          else
-            echo "ERROR: coverage.xml not found!"
-            exit 1
-          fi
-
-      - name: Install xmllint for validation
-        run: sudo apt-get update && sudo apt-get install -y libxml2-utils
-
-      - name: Validate and fix XML structure
-        run: |
-          # xmllint로 XML 검증 및 재포맷
-          xmllint --format coverage.xml > coverage_fixed.xml || {
-            echo "XML validation failed, trying to fix..."
-            # XML이 유효하지 않은 경우 강제로 수정
-            cat coverage.xml | grep -v '<!DOCTYPE' > coverage_fixed.xml
-          }
-          mv coverage_fixed.xml coverage.xml
           
-          echo "=== Final coverage.xml (first 30 lines) ==="
-          head -30 coverage.xml
+          echo "=== After fixing (first 20 lines) ==="
+          head -20 coverage.xml
 
       - name: Delete all profraw files before SonarCloud scan
         run: find . -name "*.profraw" -type f -delete
