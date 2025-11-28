@@ -10,35 +10,74 @@ on:
 
 jobs:
   sonar:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Install Rust toolchain
+      - name: Install Rust Toolchain & Components
         uses: dtolnay/rust-toolchain@stable
         with:
-          components: clippy
+          components: clippy, llvm-tools-preview
 
       - name: Install grcov
-        run: cargo install grcov
+        run: cargo install grcov --force
 
-      - name: Generate coverage
+      - name: Run Tests with Coverage Instrumentation
+        env:
+          CARGO_INCREMENTAL: "0"
+          RUSTFLAGS: "-Cinstrument-coverage"
+          LLVM_PROFILE_FILE: "%m.profraw"
+        run: cargo test --all --verbose
+
+      - name: Generate Coverage Report (lcov format)
         run: |
-          export CARGO_INCREMENTAL=0
-          export RUSTFLAGS="-Cinstrument-coverage"
-          export LLVM_PROFILE_FILE="coverage-%p-%m.profraw"
-
-          cargo test
-
-          grcov . --binary-path ./target/debug/ \
+          grcov . \
+            --binary-path ./target/debug/deps/ \
             -s . \
             -t lcov \
             --branch \
             --ignore-not-existing \
+            --ignore "/*" \
             -o lcov.info
+
+      - name: Convert lcov to SonarCloud Generic Coverage format
+        run: |
+          python3 << 'EOF'
+          import re
+          
+          coverage = {}
+          current_file = None
+          
+          with open('lcov.info', 'r') as f:
+              for line in f:
+                  if line.startswith('SF:'):
+                      current_file = line[3:].strip()
+                      if current_file not in coverage:
+                          coverage[current_file] = []
+                  elif line.startswith('DA:') and current_file:
+                      parts = line[3:].strip().split(',')
+                      if len(parts) >= 2:
+                          line_num = parts[0]
+                          hits = parts[1]
+                          coverage[current_file].append((line_num, hits))
+          
+          with open('coverage.xml', 'w') as f:
+              f.write('<?xml version="1.0" encoding="UTF-8"?>\n')
+              f.write('<coverage version="1">\n')
+              for filepath, lines in coverage.items():
+                  if lines:
+                      f.write(f'  <file path="{filepath}">\n')
+                      for line_num, hits in lines:
+                          f.write(f'    <lineToCover lineNumber="{line_num}" covered="{"true" if int(hits) > 0 else "false"}"/>\n')
+                      f.write('  </file>\n')
+              f.write('</coverage>\n')
+          EOF
+
+      - name: Delete profraw files
+        run: find . -name "*.profraw" -type f -delete
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@v2
@@ -46,8 +85,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          args: > 
-            -Dsonar.projectKey=morutine_backend
+          args: >
+            -Dsonar.projectKey=MORUTINE_backend
             -Dsonar.organization=morutine
-            -Dsonar.projectBaseDir=.
-            -Dsonar.coverageReportPaths=lcov.info
+            -Dsonar.coverageReportPaths=coverage.xml
