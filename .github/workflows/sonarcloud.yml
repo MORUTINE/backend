@@ -10,7 +10,7 @@ on:
 
 jobs:
   sonar:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
       - uses: actions/checkout@v4
@@ -20,7 +20,7 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
-          # grcov 실행에 필요한 llvm-tools-preview 컴포넌트 추가
+          # llvm-tools-preview 컴포넌트 설치
           components: clippy, llvm-tools-preview
 
       - name: Install grcov
@@ -37,9 +37,10 @@ jobs:
         run: |
           grcov . \
             --binary-path ./target/debug/ \
-            # SonarCloud 파서 호환성 맞춰야해서 Cobertura 1.0 버전 지정
+            # SonarCloud 파서 호환성 (이전 오류 해결)
             -s . -t cobertura --llvm --cobertura-version 1.0 \
             --branch --ignore-not-existing \
+            --jobs 1 \  # 병렬 처리 제한으로 메모리 사용량 최소화
             -o coverage.xml
 
       # SonarCloud Scan 컨테이너가 cargo를 찾게 PATH 설정
@@ -56,4 +57,4 @@ jobs:
             -Dsonar.projectKey=MORUTINE_backend
             -Dsonar.organization=morutine
             -Dsonar.projectBaseDir=.
-            -Dsonar.coverageReportPaths=coverage.xml # Cobertura XML 파일 경로 지정
+            -Dsonar.coverageReportPaths=coverage.xml
