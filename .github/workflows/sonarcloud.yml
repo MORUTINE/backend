@@ -50,8 +50,10 @@ jobs:
 
       - name: Fix Cobertura XML format
         run: |
-          # DOCTYPE만 제거 (XML 버전은 건드리지 않음!)
+          # DOCTYPE 제거
           sed -i 's/<!DOCTYPE coverage SYSTEM "http:\/\/cobertura\.sourceforge\.net\/xml\/coverage-04\.dtd">//' coverage.xml
+          # version="1.9"를 version="1.0"으로 변경
+          sed -i 's/version="1\.9"/version="1.0"/' coverage.xml
 
       - name: Delete all profraw files before SonarCloud scan
         run: find . -name "*.profraw" -type f -delete
