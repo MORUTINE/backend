@@ -26,44 +26,40 @@ jobs:
         run: cargo install grcov --force
 
       - name: Run Tests with Coverage Instrumentation
+        env:
+          CARGO_INCREMENTAL: "0"
+          RUSTFLAGS: "-Cinstrument-coverage"
+          LLVM_PROFILE_FILE: "default.profraw"
         run: |
-          CARGO_INCREMENTAL=0 \
-          RUSTFLAGS="-Cinstrument-coverage" \
-          # 💡 최종 수정 1: .profraw 파일을 워크스페이스 루트에 기본값으로 생성
-          LLVM_PROFILE_FILE="default.profraw" 
-          # 기존의 .profraw 파일을 삭제하여 오류 방지
           rm -f default*.profraw
           cargo test --all --verbose
 
       - name: Generate Coverage Report (Cobertura XML)
         run: |
-          GRCOV_SOURCES="morutine-api/src morutine-common/src morutine-domain/src morutine-infra/src"
-          
-          # 💡 최종 수정 2: grcov에게 워크스페이스 루트(.)를 검색하도록 위임 (가장 기본적인 LLVM 방식)
           grcov . \
-            --binary-path ./target/debug/ \ 
-            -s ${GRCOV_SOURCES} \
+            --binary-path ./target/debug/deps/ \
+            -s . \
             -t cobertura \
-            --branch --ignore-not-existing \
+            --branch \
+            --ignore-not-existing \
+            --ignore "/*" \
             -o coverage.xml
 
-      - name: Fix Cobertura XML format
+      - name: Fix Cobertura XML format for SonarCloud
         run: |
-          # XML 포맷 수정 (버전 충돌 및 태그 오류 해결)
-          sed -i 's/<!DOCTYPE coverage SYSTEM "http:\/\/cobertura\.sourceforge\.net\/xml\/coverage-04\.dtd">//' coverage.xml
-          sed -i 's/version="1\.9"/version="1\.0"/g' coverage.xml
-          sed -i 's/version="1\.0"/version="1"/' coverage.xml
-          sed -i '/<sources>/,/\/sources>/d' coverage.xml
+          sed -i 's/<!DOCTYPE[^>]*>//' coverage.xml
+          sed -i 's/<?xml version="[^"]*"?>/<?xml version="1.0"?>/' coverage.xml
+          sed -i 's/ version="[0-9.]*"/ version="1"/' coverage.xml
+          sed -i '/<sources>/,/<\/sources>/d' coverage.xml
 
-      - name: Set up Runner PATH
-        run: echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+      - name: Delete profraw files
+        run: find . -name "*.profraw" -type f -delete
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@v2
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_SCANNER_OPTS: "-Dsonar.cfamily.clippy.path=/github/home/.cargo/bin"
         with:
           args: >
             -Dsonar.projectKey=MORUTINE_backend
