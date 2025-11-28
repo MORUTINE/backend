@@ -48,9 +48,13 @@ jobs:
             --ignore "*/examples/*" \
             -o coverage.xml
 
-      - name: Fix Cobertura Version for SonarCloud
+      - name: Fix Cobertura XML format
         run: |
-          sed -i 's/version="[0-9.]*"/version="1"/g' coverage.xml
+          sed -i 's/<!DOCTYPE coverage SYSTEM "http:\/\/cobertura.sourceforge.net\/xml\/coverage-04.dtd">//' coverage.xml
+          sed -i 's/version="[0-9.]*"/version="4.0"/g' coverage.xml
+
+      - name: Delete profraw files before SonarCloud scan
+        run: rm -rf ./coverage/*.profraw
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@v2
