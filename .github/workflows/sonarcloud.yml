@@ -50,7 +50,8 @@ jobs:
 
       - name: Fix Cobertura Version for SonarCloud
         run: |
-          sed -i 's/version="1.9"/version="1.0"/g' coverage.xml
+          sed -i 's/version="1\.9"/version="1\.0"/g' coverage.xml
+          sed -i 's/version="1\.0"/version="1"/g' coverage.xml
 
       - name: Set up Runner PATH
         run: echo "$HOME/.cargo/bin" >> $GITHUB_PATH
