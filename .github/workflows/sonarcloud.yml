@@ -17,6 +17,11 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Install Python (for XML fix)
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
       - name: Install Rust Toolchain & Components
         uses: dtolnay/rust-toolchain@stable
         with:
@@ -42,6 +47,10 @@ jobs:
             -t cobertura \
             --branch --ignore-not-existing \
             -o coverage.xml
+
+      - name: Fix Cobertura Version for SonarCloud
+        run: |
+          sed -i 's/version="1.9"/version="1.0"/g' coverage.xml
 
       - name: Set up Runner PATH
         run: echo "$HOME/.cargo/bin" >> $GITHUB_PATH
