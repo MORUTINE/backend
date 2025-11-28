@@ -36,12 +36,10 @@ jobs:
         run: |
           GRCOV_SOURCES="morutine-api/src morutine-common/src morutine-domain/src morutine-infra/src"
           
-          # 💡 최종 수정: 불필요한 --binary-path, --llvm 옵션 모두 제거
           grcov . \
             -s ${GRCOV_SOURCES} \
             -t cobertura \
             --branch --ignore-not-existing \
-            --jobs 1 \  
             -o coverage.xml
 
       - name: Set up PATH for SonarCloud
