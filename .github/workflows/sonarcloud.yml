@@ -25,25 +25,23 @@ jobs:
       - name: Install grcov
         run: cargo install grcov --force
 
-      - name: Create coverage directory
-        run: mkdir -p coverage
-
       - name: Run Tests with Coverage Instrumentation
         run: |
           CARGO_INCREMENTAL=0 \
           RUSTFLAGS="-Cinstrument-coverage" \
-          LLVM_PROFILE_FILE="coverage/coverage-%p-%m.profraw"
+          # 💡 최종 수정 1: .profraw 파일을 워크스페이스 루트에 기본값으로 생성
+          LLVM_PROFILE_FILE="default.profraw" 
+          # 기존의 .profraw 파일을 삭제하여 오류 방지
+          rm -f default*.profraw
           cargo test --all --verbose
 
       - name: Generate Coverage Report (Cobertura XML)
         run: |
           GRCOV_SOURCES="morutine-api/src morutine-common/src morutine-domain/src morutine-infra/src"
           
-          # 💡 최종 수정: Panic 오류 해결을 위해 find 명령으로 파일 목록을 전달합니다.
-          PROFRAW_FILES=$(find ./coverage -name "*.profraw")
-
-          grcov ${PROFRAW_FILES} \
-            --binary-path ./target/debug/ \
+          # 💡 최종 수정 2: grcov에게 워크스페이스 루트(.)를 검색하도록 위임 (가장 기본적인 LLVM 방식)
+          grcov . \
+            --binary-path ./target/debug/ \ 
             -s ${GRCOV_SOURCES} \
             -t cobertura \
             --branch --ignore-not-existing \
@@ -51,7 +49,7 @@ jobs:
 
       - name: Fix Cobertura XML format
         run: |
-          # XML 포맷 수정 (DOCTYPE, <sources>, 버전 충돌 해결)
+          # XML 포맷 수정 (버전 충돌 및 태그 오류 해결)
           sed -i 's/<!DOCTYPE coverage SYSTEM "http:\/\/cobertura\.sourceforge\.net\/xml\/coverage-04\.dtd">//' coverage.xml
           sed -i 's/version="1\.9"/version="1\.0"/g' coverage.xml
           sed -i 's/version="1\.0"/version="1"/' coverage.xml
