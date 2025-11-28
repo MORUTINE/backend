@@ -29,17 +29,11 @@ jobs:
         env:
           CARGO_INCREMENTAL: "0"
           RUSTFLAGS: "-Cinstrument-coverage"
-          LLVM_PROFILE_FILE: "default.profraw"
-        run: |
-          rm -f default*.profraw
-          cargo test --all --verbose
+          LLVM_PROFILE_FILE: "%m.profraw"
+        run: cargo test --all --verbose
 
       - name: Generate Coverage Report (Cobertura XML)
         run: |
-          echo "=== Checking for profraw files ==="
-          find . -name "*.profraw" -type f
-          
-          echo "=== Running grcov ==="
           grcov . \
             --binary-path ./target/debug/deps/ \
             -s . \
@@ -47,37 +41,20 @@ jobs:
             --branch \
             --ignore-not-existing \
             --ignore "/*" \
+            --excl-line "^\\s*((debug_)?assert(_eq|_ne)?!|#\\[derive\\()" \
             -o coverage.xml
-          
-          echo "=== Checking coverage.xml was created ==="
-          ls -lh coverage.xml
-          
-          echo "=== First 20 lines of RAW coverage.xml ==="
-          head -20 coverage.xml
 
-      - name: Fix Cobertura XML format for SonarCloud
+      - name: Fix Cobertura XML for SonarCloud
         run: |
-          # 모든 수정을 한 번에
-          sed -i \
-            -e 's/<!DOCTYPE[^>]*>//' \
-            -e 's/<?xml version="[^"]*"?>/<?xml version="1.0" encoding="UTF-8"?>/' \
-            -e 's/<coverage[^>]*>/<coverage version="1">/' \
-            -e '/<sources>/,/<\/sources>/d' \
-            coverage.xml
-
-      - name: Verify fixed coverage.xml
-        run: |
-          echo "=== First 50 lines of coverage.xml ==="
-          head -50 coverage.xml
-          echo ""
-          echo "=== Full first line ==="
-          head -1 coverage.xml
-          echo ""
-          echo "=== Checking for DOCTYPE ==="
-          grep -c "DOCTYPE" coverage.xml || echo "No DOCTYPE found (good)"
-          echo ""
-          echo "=== Checking coverage tag ==="
-          grep -o "<coverage[^>]*>" coverage.xml | head -1
+          python3 -c "
+          import xml.etree.ElementTree as ET
+          tree = ET.parse('coverage.xml')
+          root = tree.getroot()
+          root.set('version', '1')
+          for sources in root.findall('sources'):
+              root.remove(sources)
+          tree.write('coverage.xml', encoding='utf-8', xml_declaration=True)
+          "
 
       - name: Delete profraw files
         run: find . -name "*.profraw" -type f -delete
