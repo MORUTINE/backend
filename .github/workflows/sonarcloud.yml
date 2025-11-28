@@ -36,6 +36,10 @@ jobs:
 
       - name: Generate Coverage Report (Cobertura XML)
         run: |
+          echo "=== Checking for profraw files ==="
+          find . -name "*.profraw" -type f
+          
+          echo "=== Running grcov ==="
           grcov . \
             --binary-path ./target/debug/deps/ \
             -s . \
@@ -44,6 +48,12 @@ jobs:
             --ignore-not-existing \
             --ignore "/*" \
             -o coverage.xml
+          
+          echo "=== Checking coverage.xml was created ==="
+          ls -lh coverage.xml
+          
+          echo "=== First 20 lines of RAW coverage.xml ==="
+          head -20 coverage.xml
 
       - name: Fix Cobertura XML format for SonarCloud
         run: |
