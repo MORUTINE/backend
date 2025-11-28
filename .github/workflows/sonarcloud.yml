@@ -50,7 +50,7 @@ jobs:
 
       - name: Fix Cobertura XML format
         run: |
-          sed -i 's/<!DOCTYPE coverage SYSTEM "http:\/\/cobertura.sourceforge.net\/xml\/coverage-04.dtd">//' coverage.xml
+          sed -i '/<\!DOCTYPE/d' coverage.xml
           sed -i 's/version="[0-9.]*"/version="4.0"/g' coverage.xml
 
       - name: Verify coverage.xml exists and show content
