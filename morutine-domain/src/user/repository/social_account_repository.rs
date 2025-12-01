@@ -3,7 +3,7 @@ use crate::user::models::social_account::SocialAccount;
 use async_trait::async_trait;
 
 #[async_trait]
-pub trait SocialAccountRepository {
+pub trait SocialAccountRepository: Send + Sync {
     /// 로그인용 — 소셜 인증 → 내부 회원 찾기
     async fn find_by_provider_and_user_id(
         &self,

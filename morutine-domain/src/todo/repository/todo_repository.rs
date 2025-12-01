@@ -4,7 +4,7 @@ use async_trait::async_trait;
 use chrono::NaiveDate;
 
 #[async_trait]
-pub trait TodoRepository {
+pub trait TodoRepository: Send + Sync {
     async fn find_todo_by_user_and_date(
         &self,
         user_id: i64,
