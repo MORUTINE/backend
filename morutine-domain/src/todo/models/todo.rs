@@ -4,9 +4,8 @@ use crate::todo::{
     EmptyContent, ItemNotFound, MaxItemLimit, PastDateNotAllowed, StateChangeNotAllowed,
 };
 use chrono::{DateTime, NaiveDate, Utc};
-use derive_builder::Builder;
 
-#[derive(Debug, Clone, Builder)]
+#[derive(Debug, Clone)]
 pub struct Todo {
     id: Option<i64>,
     user_id: i64,
@@ -14,6 +13,16 @@ pub struct Todo {
     items: Vec<TodoItem>,
     created_at: DateTime<Utc>,
     modified_at: DateTime<Utc>,
+}
+
+/// Infrastructure에서 DB entity → Domain model 변환 시 사용 (id 세팅)
+pub struct TodoFromEntity {
+    pub id: i64,
+    pub user_id: i64,
+    pub date: NaiveDate,
+    pub items: Vec<TodoItem>,
+    pub created_at: DateTime<Utc>,
+    pub modified_at: DateTime<Utc>,
 }
 
 impl Todo {
@@ -32,6 +41,18 @@ impl Todo {
             created_at: Utc::now(),
             modified_at: Utc::now(),
         })
+    }
+
+    /// DB에서 불러온 데이터를 Domain model로 변환
+    pub fn from_entity(entity: TodoFromEntity) -> Self {
+        Self {
+            id: Some(entity.id),
+            user_id: entity.user_id,
+            date: entity.date,
+            items: entity.items,
+            created_at: entity.created_at,
+            modified_at: entity.modified_at,
+        }
     }
 
     pub fn add_item(&mut self, content: &str) -> Result<(), TodoErrorCode> {
@@ -150,7 +171,7 @@ impl Todo {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::todo::models::todo_item::TodoItemBuilder;
+    use crate::todo::models::todo_item::TodoItemForTest;
     use crate::todo::models::todo_item_status::TodoItemStatus;
     use TodoErrorCode::MaxItemLimit;
     use TodoItemStatus::{Altered, Completed, Failed};
@@ -227,15 +248,13 @@ mod tests {
         let mut todo = Todo::new(1, date).unwrap();
 
         // 원래 add_item 메서드 써서 넣어야 되는데, 테스트용으로 직접 아이템을 추가
-        let item = TodoItemBuilder::default()
-            .id(Some(10))
-            .todo_id(todo.user_id())
-            .content("벤치".into())
-            .status(TodoItemStatus::Pending)
-            .created_at(Utc::now())
-            .modified_at(Utc::now())
-            .build()
-            .unwrap();
+        let item = TodoItem::for_test(TodoItemForTest {
+            id: 10,
+            // todo_id도 테스트용으로 임시 더미값
+            todo_id: 1,
+            content: "벤치프레스".to_string(),
+            status: TodoItemStatus::Pending,
+        });
 
         todo.items.push(item);
 
@@ -259,15 +278,12 @@ mod tests {
         let date = Utc::now().date_naive();
         let mut todo = Todo::new(1, date).unwrap();
 
-        let item = TodoItemBuilder::default()
-            .id(Some(5))
-            .todo_id(todo.user_id())
-            .content("벤치".into())
-            .status(TodoItemStatus::Pending)
-            .created_at(Utc::now())
-            .modified_at(Utc::now())
-            .build()
-            .unwrap();
+        let item = TodoItem::for_test(TodoItemForTest {
+            id: 10,
+            todo_id: 1,
+            content: "벤치프레스".to_string(),
+            status: TodoItemStatus::Pending,
+        });
 
         todo.items.push(item);
 
@@ -285,15 +301,12 @@ mod tests {
         let date = Utc::now().date_naive();
         let mut todo = Todo::new(1, date).unwrap();
 
-        let item = TodoItemBuilder::default()
-            .id(Some(3))
-            .todo_id(todo.user_id())
-            .content("벤치".into())
-            .status(TodoItemStatus::Pending)
-            .created_at(Utc::now())
-            .modified_at(Utc::now())
-            .build()
-            .unwrap();
+        let item = TodoItem::for_test(TodoItemForTest {
+            id: 3,
+            todo_id: 1,
+            content: "벤치프레스".to_string(),
+            status: TodoItemStatus::Pending,
+        });
 
         todo.items.push(item);
 
@@ -306,15 +319,12 @@ mod tests {
     fn update_item_content_should_succeed_until_that_date() {
         let mut todo = Todo::new(1, future_date()).unwrap();
 
-        let item = TodoItemBuilder::default()
-            .id(Some(10))
-            .todo_id(1)
-            .content("벤치".into())
-            .status(TodoItemStatus::Pending)
-            .created_at(Utc::now())
-            .modified_at(Utc::now())
-            .build()
-            .unwrap();
+        let item = TodoItem::for_test(TodoItemForTest {
+            id: 10,
+            todo_id: 9,
+            content: "벤치프레스".to_string(),
+            status: TodoItemStatus::Pending,
+        });
 
         todo.items.push(item);
 
@@ -334,15 +344,12 @@ mod tests {
             modified_at: Utc::now(),
         };
 
-        let item = TodoItemBuilder::default()
-            .id(Some(5))
-            .todo_id(1)
-            .content("벤치 80kg 10회 10세트".into())
-            .status(TodoItemStatus::Pending)
-            .created_at(Utc::now())
-            .modified_at(Utc::now())
-            .build()
-            .unwrap();
+        let item = TodoItem::for_test(TodoItemForTest {
+            id: 10,
+            todo_id: 1,
+            content: "벤치 80kg 10회 10세트".to_string(),
+            status: TodoItemStatus::Pending,
+        });
 
         todo.items.push(item);
 

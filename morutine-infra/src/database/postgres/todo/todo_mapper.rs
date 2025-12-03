@@ -1,8 +1,8 @@
 use super::{todo_entity, todo_item_entity};
+use domain::todo::models::todo::TodoFromEntity;
+use domain::todo::models::todo_item::TodoItemFromEntity;
+use domain::todo::models::todo_item_status::TodoItemStatus;
 use domain::todo::models::{todo::Todo, todo_item::TodoItem};
-use domain::todo::models::{
-    todo::TodoBuilder, todo_item::TodoItemBuilder, todo_item_status::TodoItemStatus,
-};
 use domain::todo::todo_error_code::TodoErrorCode;
 use sea_orm::{NotSet, Set};
 
@@ -36,52 +36,46 @@ impl TodoMapper {
         todo: todo_entity::Model,
         items: Vec<todo_item_entity::Model>,
     ) -> Result<Todo, TodoErrorCode> {
-        let mut item_models = Vec::new();
+        let mut item_models: Vec<TodoItem> = items
+            .into_iter()
+            .map(|e| {
+                let status = TodoItemStatus::try_from(e.status.as_str())?;
 
-        for i in items {
-            let status = TodoItemStatus::try_from(i.status.as_str())?;
+                Ok(TodoItem::from_entity(TodoItemFromEntity {
+                    id: e.id,
+                    todo_id: e.todo_id,
+                    content: e.content,
+                    status,
+                    altered_content: e.altered_content,
+                    image_url: e.image_url,
+                    created_at: e.created_at.into(),
+                    modified_at: e.modified_at.into(),
+                }))
+            })
+            .collect::<Result<Vec<_>, TodoErrorCode>>()?;
 
-            let item = TodoItemBuilder::default()
-                .id(Some(i.id))
-                .todo_id(i.todo_id)
-                .content(i.content)
-                .status(status)
-                .altered_content(i.altered_content)
-                .image_url(i.image_url)
-                .created_at(i.created_at.into())
-                .modified_at(i.modified_at.into())
-                .build()
-                .map_err(|_| TodoErrorCode::InvalidStatus)?;
-
-            item_models.push(item);
-        }
-
-        let todo_model = TodoBuilder::default()
-            .id(Some(todo.id))
-            .user_id(todo.user_id)
-            .date(todo.date)
-            .items(item_models)
-            .created_at(todo.created_at.into())
-            .modified_at(todo.modified_at.into())
-            .build()
-            .map_err(|_| TodoErrorCode::InvalidStatus)?;
-
-        Ok(todo_model)
+        Ok(Todo::from_entity(TodoFromEntity {
+            id: todo.id,
+            user_id: todo.user_id,
+            date: todo.date,
+            items: item_models,
+            created_at: todo.created_at.into(),
+            modified_at: todo.modified_at.into(),
+        }))
     }
 
     pub fn map_entity_to_item(entity: todo_item_entity::Model) -> Result<TodoItem, anyhow::Error> {
         let status = TodoItemStatus::try_from(entity.status.as_str())?;
 
-        TodoItemBuilder::default()
-            .id(Some(entity.id))
-            .todo_id(entity.todo_id)
-            .content(entity.content)
-            .status(status)
-            .altered_content(entity.altered_content)
-            .image_url(entity.image_url)
-            .created_at(entity.created_at.into())
-            .modified_at(entity.modified_at.into())
-            .build()
-            .map_err(Into::into)
+        Ok(TodoItem::from_entity(TodoItemFromEntity {
+            id: entity.id,
+            todo_id: entity.todo_id,
+            content: entity.content,
+            status,
+            altered_content: entity.altered_content,
+            image_url: entity.image_url,
+            created_at: entity.created_at.into(),
+            modified_at: entity.modified_at.into(),
+        }))
     }
 }

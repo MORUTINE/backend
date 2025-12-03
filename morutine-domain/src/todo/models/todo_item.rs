@@ -2,20 +2,38 @@ use crate::todo::models::todo_item_status::TodoItemStatus;
 use crate::todo::todo_error_code::TodoErrorCode::{self, EmptyContent};
 use TodoItemStatus::{Altered, Completed, Failed, Pending};
 use chrono::{DateTime, Utc};
-use derive_builder::Builder;
 
-#[derive(Debug, Clone, Builder)]
+#[derive(Debug, Clone)]
 pub struct TodoItem {
     id: Option<i64>,
     todo_id: i64,
     content: String,
     status: TodoItemStatus,
-    #[builder(default)]
     altered_content: Option<String>,
-    #[builder(default)]
     image_url: Option<String>,
     created_at: DateTime<Utc>,
     modified_at: DateTime<Utc>,
+}
+
+/// Infrastructure에서 DB entity → Domain model 변환 시 사용 (id 세팅)
+pub struct TodoItemFromEntity {
+    pub id: i64,
+    pub todo_id: i64,
+    pub content: String,
+    pub status: TodoItemStatus,
+    pub altered_content: Option<String>,
+    pub image_url: Option<String>,
+    pub created_at: DateTime<Utc>,
+    pub modified_at: DateTime<Utc>,
+}
+
+/// 테스트 전용 파라미터
+#[cfg(test)]
+pub struct TodoItemForTest {
+    pub id: i64,
+    pub todo_id: i64,
+    pub content: String,
+    pub status: TodoItemStatus,
 }
 
 impl TodoItem {
@@ -34,6 +52,20 @@ impl TodoItem {
             created_at: Utc::now(),
             modified_at: Utc::now(),
         })
+    }
+
+    /// DB에서 불러온 데이터를 Domain model로 변환
+    pub fn from_entity(entity: TodoItemFromEntity) -> Self {
+        Self {
+            id: Some(entity.id),
+            todo_id: entity.todo_id,
+            content: entity.content,
+            status: entity.status,
+            altered_content: entity.altered_content,
+            image_url: entity.image_url,
+            created_at: entity.created_at,
+            modified_at: entity.modified_at,
+        }
     }
 
     pub(crate) fn update_content(&mut self, new_content: &str) {
@@ -86,6 +118,21 @@ impl TodoItem {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    impl TodoItem {
+        pub fn for_test(params: TodoItemForTest) -> Self {
+            Self {
+                id: Some(params.id),
+                todo_id: params.todo_id,
+                content: params.content,
+                status: params.status,
+                altered_content: None,
+                image_url: None,
+                created_at: Utc::now(),
+                modified_at: Utc::now(),
+            }
+        }
+    }
 
     #[test]
     fn new_todo_item_success() {
