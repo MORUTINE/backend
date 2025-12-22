@@ -1,12 +1,17 @@
-use common::error::ErrorCode;
-
 #[derive(Debug)]
-pub struct AppError<E: ErrorCode> {
-    pub code: E,
+pub struct AppError(pub anyhow::Error);
+
+impl AppError {
+    pub fn new(e: impl Into<anyhow::Error>) -> Self {
+        Self(e.into())
+    }
 }
 
-impl<E: ErrorCode> AppError<E> {
-    pub fn new(code: E) -> Self {
-        Self { code }
+impl<E> From<E> for AppError
+where
+    E: Into<anyhow::Error>,
+{
+    fn from(err: E) -> Self {
+        Self(err.into())
     }
 }

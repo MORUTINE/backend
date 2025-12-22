@@ -1,5 +1,6 @@
 use super::{error_code::ErrorCode, error_reason::ErrorReason};
 use crate::constant::status::*;
+use std::fmt;
 
 #[derive(Debug)]
 pub enum CommonErrorCode {
@@ -11,6 +12,13 @@ pub enum CommonErrorCode {
     Conflict,
     TooManyRequests,
     InternalServerError,
+}
+
+impl fmt::Display for CommonErrorCode {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let reason = self.reason();
+        write!(f, "{}: {}", reason.code, reason.message)
+    }
 }
 
 impl ErrorCode for CommonErrorCode {

@@ -6,33 +6,54 @@ use axum::{
 use serde_json::json;
 
 use crate::common::error::app_error::AppError;
-use crate::common::error::database_error_wrapper::DatabaseApiError;
 use common::error::{CommonErrorCode, ErrorCode};
+use domain::todo::todo_error_code::TodoErrorCode;
+use domain::user::user_error_code::UserErrorCode;
 use infra::database::database_error_code::DatabaseErrorCode;
 
-// AppError<E> -> HTTP Response
-impl<E: ErrorCode> IntoResponse for AppError<E> {
+// AppError -> HTTP Response
+impl IntoResponse for AppError {
     fn into_response(self) -> Response {
-        let reason = self.code.reason();
+        let error = self.0;
 
-        let body = Json(json!({
-            "code": reason.code,
-            "message": reason.message,
-        }));
+        // 공통 에러
+        if let Some(e) = error.downcast_ref::<CommonErrorCode>() {
+            return make_response(e);
+        }
 
-        (StatusCode::from_u16(reason.status).unwrap(), body).into_response()
+        // 각 도메인 영역 에러
+        if let Some(e) = error.downcast_ref::<TodoErrorCode>() {
+            return make_response(e);
+        }
+
+        if let Some(e) = error.downcast_ref::<UserErrorCode>() {
+            return make_response(e);
+        }
+
+        // DB 에러 (외부 노출 x)
+        if let Some(e) = error.downcast_ref::<DatabaseErrorCode>() {
+            match e {
+                DatabaseErrorCode::UniqueViolation(_) => {
+                    return make_response(&CommonErrorCode::Conflict);
+                }
+                DatabaseErrorCode::NotFound => return make_response(&CommonErrorCode::NotFound),
+                _ => {}
+            }
+        }
+
+        // 그 외 모든 에러 -> 500 서버 에러 & 로깅
+        tracing::error!("{:?}", error);
+        make_response(&CommonErrorCode::InternalServerError)
     }
 }
 
-// PostgresError -> HTTP Response
-impl IntoResponse for DatabaseApiError {
-    fn into_response(self) -> Response {
-        let app_error: AppError<CommonErrorCode> = match self.0 {
-            DatabaseErrorCode::UniqueViolation(_) => AppError::new(CommonErrorCode::Conflict),
-            DatabaseErrorCode::NotFound => AppError::new(CommonErrorCode::NotFound),
-            _ => AppError::new(CommonErrorCode::InternalServerError),
-        };
+fn make_response(e: &impl ErrorCode) -> Response {
+    let reason = e.reason();
 
-        app_error.into_response()
-    }
+    let body = Json(json!({
+        "code": reason.code,
+        "message": reason.message,
+    }));
+
+    (StatusCode::from_u16(reason.status).unwrap(), body).into_response()
 }
