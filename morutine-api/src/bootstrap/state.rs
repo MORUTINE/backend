@@ -1,4 +1,5 @@
 use crate::bootstrap::config::AppConfig;
+use crate::domain::todo::application::todo_service::TodoService;
 use axum::Router;
 use domain::todo::repository::todo_repository::TodoRepository;
 use infra::database::postgres::todo::todo_repository_impl::TodoRepositoryImpl;
@@ -8,15 +9,16 @@ use std::time::Duration;
 
 #[derive(Clone)]
 pub struct AppState {
-    pub todo_repository: Arc<dyn TodoRepository>,
+    pub todo_service: Arc<TodoService>,
 }
 
 impl AppState {
     pub async fn new(config: &AppConfig) -> Self {
         let db = Self::init_db(config).await;
-        let todo_repository = Arc::new(TodoRepositoryImpl::new(db.clone()));
 
-        Self { todo_repository }
+        let todo_service = Self::create_todo_service(&db);
+
+        Self { todo_service }
     }
 
     async fn init_db(config: &AppConfig) -> DatabaseConnection {
@@ -34,6 +36,12 @@ impl AppState {
         Database::connect(opt)
             .await
             .expect("DB 연결에 실패 했습니다.")
+    }
+
+    fn create_todo_service(db: &DatabaseConnection) -> Arc<TodoService> {
+        let todo_repository: Arc<dyn TodoRepository> =
+            Arc::new(TodoRepositoryImpl::new(db.clone()));
+        Arc::new(TodoService::new(todo_repository.clone()))
     }
 }
 
