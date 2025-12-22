@@ -16,6 +16,8 @@ pub enum TodoErrorCode {
     StateChangeNotAllowed,
     #[error("유효하지 않은 상태값")]
     InvalidStatus,
+    #[error("날짜 형식이 올바르지 않음")]
+    InvalidDateFormat,
 }
 
 impl ErrorCode for TodoErrorCode {
@@ -50,6 +52,11 @@ impl ErrorCode for TodoErrorCode {
                 status: BAD_REQUEST,
                 code: "TODO_400_2",
                 message: "유효하지 않은 상태값입니다.",
+            },
+            TodoErrorCode::InvalidDateFormat => ErrorReason {
+                status: BAD_REQUEST,
+                code: "TODO_400_3",
+                message: "날짜 형식(YYYY-MM-DD)이 올바르지 않습니다.",
             },
         }
     }
