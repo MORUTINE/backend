@@ -1,4 +1,4 @@
-use crate::todo::models::todo_item::TodoItem;
+use crate::todo::models::todo_item::{TodoItem, TodoItemFromEntity};
 use crate::todo::todo_error_code::TodoErrorCode;
 use crate::todo::{
     EmptyContent, ItemNotFound, MaxItemLimit, PastDateNotAllowed, StateChangeNotAllowed,
@@ -20,7 +20,7 @@ pub struct TodoFromEntity {
     pub id: i64,
     pub user_id: i64,
     pub date: NaiveDate,
-    pub items: Vec<TodoItem>,
+    pub items: Vec<TodoItemFromEntity>,
     pub created_at: DateTime<Utc>,
     pub modified_at: DateTime<Utc>,
 }
@@ -49,7 +49,11 @@ impl Todo {
             id: Some(entity.id),
             user_id: entity.user_id,
             date: entity.date,
-            items: entity.items,
+            items: entity
+                .items
+                .into_iter()
+                .map(TodoItem::from_entity)
+                .collect(),
             created_at: entity.created_at,
             modified_at: entity.modified_at,
         }
@@ -287,7 +291,7 @@ mod tests {
 
         todo.items.push(item);
 
-        todo.alter_item(5, "사람 많아서 스쿼트로 변경").unwrap();
+        todo.alter_item(10, "사람 많아서 스쿼트로 변경").unwrap();
 
         assert_eq!(todo.items[0].status(), Altered);
         assert_eq!(
@@ -353,7 +357,7 @@ mod tests {
 
         todo.items.push(item);
 
-        let res = todo.update_item_content(5, "데드 100kg 10회 10세트");
+        let res = todo.update_item_content(10, "데드 100kg 10회 10세트");
         assert!(matches!(res, Err(PastDateNotAllowed)));
     }
 }
