@@ -13,7 +13,7 @@ pub fn create_app_router(config: &AppConfig) -> Router<AppState> {
         Router::new()
             .nest("/system", system_routes())
             .nest(
-                "/todo",
+                "/todos",
                 todo_routes().layer(axum::middleware::from_fn(mock_auth_middleware)),
             )
             .layer(build_compression_layer())
