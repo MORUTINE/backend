@@ -2,6 +2,8 @@ use crate::bootstrap::config::AppConfig;
 use crate::domain::todo::application::todo_service::TodoService;
 use axum::Router;
 use domain::todo::repository::todo_repository::TodoRepository;
+use infra::database::postgres::todo::todo_query_repository::TodoQueryRepository;
+use infra::database::postgres::todo::todo_query_repository_impl::TodoQueryRepositoryImpl;
 use infra::database::postgres::todo::todo_repository_impl::TodoRepositoryImpl;
 use sea_orm::{ConnectOptions, Database, DatabaseConnection};
 use std::sync::Arc;
@@ -41,7 +43,11 @@ impl AppState {
     fn create_todo_service(db: &DatabaseConnection) -> Arc<TodoService> {
         let todo_repository: Arc<dyn TodoRepository> =
             Arc::new(TodoRepositoryImpl::new(db.clone()));
-        Arc::new(TodoService::new(todo_repository.clone()))
+
+        let todo_query_repository: Arc<dyn TodoQueryRepository> =
+            Arc::new(TodoQueryRepositoryImpl::new(db.clone()));
+
+        Arc::new(TodoService::new(todo_repository, todo_query_repository))
     }
 }
 

@@ -3,7 +3,6 @@ use domain::todo::models::todo::TodoFromEntity;
 use domain::todo::models::todo_item::TodoItemFromEntity;
 use domain::todo::models::todo_item_status::TodoItemStatus;
 use domain::todo::models::{todo::Todo, todo_item::TodoItem};
-use domain::todo::todo_error_code::TodoErrorCode;
 use sea_orm::{NotSet, Set};
 
 pub struct TodoMapper;
@@ -35,39 +34,41 @@ impl TodoMapper {
     pub fn map_entity_to_todo(
         todo: todo_entity::Model,
         items: Vec<todo_item_entity::Model>,
-    ) -> Result<Todo, TodoErrorCode> {
-        let mut item_models: Vec<TodoItem> = items
-            .into_iter()
-            .map(|e| {
-                let status = TodoItemStatus::try_from(e.status.as_str())?;
-
-                Ok(TodoItem::from_entity(TodoItemFromEntity {
-                    id: e.id,
-                    todo_id: e.todo_id,
-                    content: e.content,
-                    status,
-                    altered_content: e.altered_content,
-                    image_url: e.image_url,
-                    created_at: e.created_at.into(),
-                    modified_at: e.modified_at.into(),
-                }))
-            })
-            .collect::<Result<Vec<_>, TodoErrorCode>>()?;
-
-        Ok(Todo::from_entity(TodoFromEntity {
-            id: todo.id,
-            user_id: todo.user_id,
-            date: todo.date,
-            items: item_models,
-            created_at: todo.created_at.into(),
-            modified_at: todo.modified_at.into(),
-        }))
+    ) -> Result<Todo, anyhow::Error> {
+        let from_entity = Self::map_entity_to_todo_from_entity(todo, items)?;
+        Ok(Todo::from_entity(from_entity))
     }
 
     pub fn map_entity_to_item(entity: todo_item_entity::Model) -> Result<TodoItem, anyhow::Error> {
+        let from_entity = Self::map_entity_to_item_from_entity(entity)?;
+        Ok(TodoItem::from_entity(from_entity))
+    }
+
+    pub fn map_entity_to_todo_from_entity(
+        todo: todo_entity::Model,
+        items: Vec<todo_item_entity::Model>,
+    ) -> Result<TodoFromEntity, anyhow::Error> {
+        let item_from_entities = items
+            .into_iter()
+            .map(|e| Self::map_entity_to_item_from_entity(e))
+            .collect::<Result<Vec<_>, _>>()?;
+
+        Ok(TodoFromEntity {
+            id: todo.id,
+            user_id: todo.user_id,
+            date: todo.date,
+            items: item_from_entities,
+            created_at: todo.created_at.into(),
+            modified_at: todo.modified_at.into(),
+        })
+    }
+
+    pub fn map_entity_to_item_from_entity(
+        entity: todo_item_entity::Model,
+    ) -> Result<TodoItemFromEntity, anyhow::Error> {
         let status = TodoItemStatus::try_from(entity.status.as_str())?;
 
-        Ok(TodoItem::from_entity(TodoItemFromEntity {
+        Ok(TodoItemFromEntity {
             id: entity.id,
             todo_id: entity.todo_id,
             content: entity.content,
@@ -76,6 +77,6 @@ impl TodoMapper {
             image_url: entity.image_url,
             created_at: entity.created_at.into(),
             modified_at: entity.modified_at.into(),
-        }))
+        })
     }
 }
