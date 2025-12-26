@@ -1,2 +1,3 @@
+pub mod migration;
 pub mod todo;
-mod user;
+pub mod user;
