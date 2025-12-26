@@ -5,6 +5,7 @@ edition = "2024"
 
 [dependencies]
 sea-orm = { version = "1.1.19", features = ["runtime-tokio-rustls", "macros", "sqlx-postgres", "chrono"] }
+sea-orm-migration = { version = "1.1.19", features = ["runtime-tokio-rustls", "sqlx-postgres"] }
 async-trait = "0.1"
 serde = { version = "1.0", features = ["derive"] }
 tracing = "0.1"
